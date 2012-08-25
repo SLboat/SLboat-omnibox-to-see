@@ -2,7 +2,7 @@
    "background": {
 	  "scripts" : ["see.js"]
    },
-   "description": "森亮航海见识快捷搜索",
+   "description": "森亮航海见识搜索",
    "icons": {
       "48": "img/see_48.png",
       "16": "img/see_16.png"
@@ -15,6 +15,6 @@
 	"tabs",
 	"http://see.sl088.com/*" 
 	],
-   "version": "0.123",
+   "version": "0.234",
    "manifest_version": 2
 }
