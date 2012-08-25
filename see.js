@@ -1,4 +1,3 @@
-<script>
     var options = {};
     var currentRequest = null;
    
@@ -103,6 +102,3 @@
     chrome.omnibox.onInputEntered.addListener(function(text) {       
         navigate("http://see.sl088.com/w/index.php?search=" + text);
     });
-
-    
-</script>

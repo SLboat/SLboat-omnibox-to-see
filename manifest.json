@@ -1,5 +1,7 @@
 {
-   "background_page": "background.html",
+   "background": {
+	  "scripts" : ["see.js"]
+   },
    "description": "森亮航海见识快捷搜索",
    "icons": {
       "48": "img/see_48.png",
@@ -9,6 +11,10 @@
    "omnibox": {
       "keyword": "see"
    },
-   "permissions": [ "tabs", "http://see.sl088.com/*" ],
-   "version": "0.123"
+   "permissions": [
+	"tabs",
+	"http://see.sl088.com/*" 
+	],
+   "version": "0.123",
+   "manifest_version": 2
 }
