@@ -46,7 +46,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 				//push入数据
 				results.push({
 					content: data_take, //这是发送给输入事件的数据
-					description: data_take +"\t<dim>发现在见识标题 </dim>" //这是描述
+					description: data_take +"\t       <dim>>发现在见识标题 </dim>" //这是描述
 				});
 			}
 			//玩意不知道是干嘛的
