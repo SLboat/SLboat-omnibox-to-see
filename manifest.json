@@ -9,12 +9,12 @@
    },
    "name": "航海见识",
    "omnibox": {
-      "keyword": "see"
+      "keyword": "~"
    },
    "permissions": [
 	"tabs",
 	"http://see.sl088.com/*" 
 	],
-   "version": "0.234",
+   "version": "0.235",
    "manifest_version": 2
 }
