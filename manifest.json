@@ -7,7 +7,7 @@
       "48": "img/see_48.png",
       "16": "img/see_16.png"
    },
-   "name": "航海见识",
+   "name": "见识探索",
    "omnibox": {
       "keyword": "@"
    },
@@ -15,6 +15,6 @@
 	"tabs",
 	"http://see.sl088.com/*" 
 	],
-   "version": "2.241",
+   "version": "2.242",
    "manifest_version": 2
 }
