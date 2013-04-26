@@ -14,6 +14,8 @@ function get_lastchar(text) {
 
 //绑定输入事件
 chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
+	var isedit = false; //编辑模式
+
 	//停止上次事件，看起来像是做了这个
 	if (currentRequest != null) {
 		currentRequest.onreadystatechange = null;
@@ -26,6 +28,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	if (text.length > 0 && text != "最近" ) { //过滤最近
 		//处理增加模式
 		if (get_lastchar(text).last == "+") {
+			isedit = true; //设置标记
 			//处置默认的玩意，默认的时候传出去的content就是本身咯
 			put_info("进入森亮号航海见识开始建造: " + get_lastchar(text).str);
 			//todo:如果原始有加号呢？
@@ -43,7 +46,11 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 				var data_take = result_arry[index]; //处理这个玩意
 				if (data_take==org_text) //完全匹配
 				{
-					put_info("探索到森亮号航海见识拥有完全匹配<url>[%s]</url>的见识！");
+					//一致提醒
+					if (isedit){
+							put_info("进入航海见识中立即开始<dim>编辑</dim>见识<url>[" + org_text + "]</url>！"); //处理不一致的文字
+					}else {put_info("探索到森亮号航海见识拥有完全匹配<url>["+ org_text + "]</url>的见识！");}
+
 				}
 				//制造高亮玩意
 				var re = new RegExp(org_text, "i");
