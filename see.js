@@ -62,11 +62,13 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 				//push入数据
 				results.push({
 					content: data_take, //这是发送给输入事件的数据，如果和输入一样，不会被送入
-					description: match_str + "\t       <dim>->存在于在航海见识</dim>" //这是描述
+					description: match_str + "\t       <dim>->存在于在航海见识 正在更深入探索</dim>" //这是描述
 				});
 			}
 			//玩意不知道是干嘛的-它是直接传递给回调函数处理结果的玩意
 			suggest(results); //提交结果，完事
+			//等待更深一步探索
+
 		});
 	} else { //直接现实最近的
 		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
@@ -147,6 +149,7 @@ function get_suggests(query, callback) {
 		}
 	};
 	req.send();
+	return req; //返回原型
 }
 
 // 获得最近结果
@@ -170,6 +173,7 @@ function get_recently(query, callback) {
 		}
 	};
 	req.send();
+	return req; //返回原型
 }
 
 //前行到网站
