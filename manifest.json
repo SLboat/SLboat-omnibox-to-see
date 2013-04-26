@@ -1,6 +1,6 @@
 {
    "background": {
-	  "scripts" : ["./see.js","./str_unit.js",]
+	  "scripts" : ["./js/see.js","./js/str_unit.js"]
    },
    "description": "森亮号航海见识搜索，快速的寻找，探索，发现森亮航海见识！",
    "icons": {
