@@ -3,27 +3,28 @@ var site_url = "http://see.sl088.com";
 
 /* 常规性配置 */
 var perfix_edit = "+"; //前缀编辑模式
-var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var perfix_edit_newtab = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者
 
 /* 常规检查官-检查是否在特定的编辑模式下 
  * 返回构建：
  * isedit:是否编辑，isnew:是否新建，newtext:过滤后的文字
  */
 function edit_chk(text){ //检查编辑模式
-		var result={isedit: false, isnew: false, newtext: text}; //返回构造
+	var result={isedit: false, isnew: false, newtext: text}; //返回构造
 
 	if (str_chklast(text,perfix_edit) || str_chklast(text,perfix_edit_newtab)) {
 		result.isedit = true; //设置标记
-		result.newtext = str_getlast(text,perfix_edit.length+1).str; //返回剩余的一部分
+		result.newtext = str_getlast(text,perfix_edit.length).str; //返回剩余的一部分
 	}
 	if(str_chklast(text,perfix_edit_newtab)) {
-			isedit = true; //单独的标记
+			result.isnew = true; //单独的标记
 	}
 	return result;//返回构建
 }
 
 /* 输入变动 
  * 这是一切工作的核心
+ * todo：拆散化，建立子函数们一起工作
  */
 chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	var req_url; //申请url，json
@@ -38,25 +39,28 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		currentRequest = null;
 	}
 
-	put_info("进入森亮号航海见识开始探索[<match>%s</match>]");
+	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>%s</match>]");
+
+	//处理编辑模式字符，看起来没啥坏处
+	edit_type = edit_chk(text); //检查类型
+	text = edit_type.newtext; //文字也处理了
+	if (edit_type.isnew){
+		//新的标记方式，字符串全部索引起来？
+		str_new_win = "进入<url>最近的海域</url>";
+	}
+	if (edit_type.isedit)
+	{
+		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text +"]</url>!" );
+	}
 
 	if (text.length > 0 && text != "最近" ) { //过滤最近，但不排除无
 		//处理增加模式
-		edit_type = edit_chk(text); //检查类型
-		text = edit_type.newtext; //文字也处理了
-		if (edit_type.isnew){
-			//新的标记方式，字符串全部索引起来？
-			str_new_win = "从<url>最近的海域</url>进入";
-		}
-		if (edit_type.isedit)
-		{
-			put_info("它还不存在,现在<url>建造</url>见识: <url>[" + str_getlast(text).str +"]</url>!"+str_new_win );
-		}
-		req_url = site_url + "/w/api.php?action=opensearch&suggest&search=" + text; //构造字串
+		req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + text; //构造字串
 		//定义当前请求函数，以便后来请求
 		currentRequest = get_json(req_url, function (data, org_text) { //处理返回的json如何处置
 			var results = [];
-			var result_arry = data[1]; //返回的数组，长度0就是没有结果
+			//用于一个本地的保留备份
+			result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
 			if (result_arry.length == 0) {
 				return false; //退出
 			}
@@ -67,7 +71,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 				{
 					//一致提醒
 					if (edit_type.isedit){
-							put_info("探索到了!<url>重新</url	>见识<url>[" + text + "]</url>!"+str_new_win); //处理不一致的文字
+							put_info("探索到了!"+ str_new_win +"<url>重新</url	>见识<url>[" + text + "]</url>!"); //处理不一致的文字
 					}else {put_info("噢!太好了!探索到存在<url>["+ text + "]</url>的见识!前往所在地吗?");}
 
 				}
@@ -84,22 +88,30 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 			//玩意不知道是干嘛的-它是直接传递给回调函数处理结果的玩意
 			suggest(results); //提交结果，完事
 			//等待更深一步探索
-			//标题们
-			titles_all = "Mediawiki%20api%20%E9%87%8D%E5%AE%9A%E5%90%91%E6%A3%80%E6%9F%A5%7CMountain%20Lion%20%E5%AE%89%E8%A3%85%7C%E9%A6%96%E9%A1%B5"
-			req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles="+titles_all
+			titles_all = result_arry.join("|"); //拼凑字符串，用于标题
+			req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles="+encodeURIComponent(titles_all);
 			//开始解析
 			currentRequest = get_json(req_url, function (data) {
-				if (data.query.pageids.length==0) //没有返回，几乎不会发生
-				{
-					return false;
-				}
+				var titles = []; //标题建立的一个查询队列
 				var page_ids_arr=data.query.pageids
-				//处理数据
+				if (page_ids_arr.length==0) //没有返回，几乎不会发生
+				{
+					put_info("更进一步探索失败了！"); //临时提醒
+					return false;
+					//提醒进一步获取失败？
+				}
+				//重定向解析
+				var redirects_arr=data.query.redirects
+				if (typeof(redirects_arr) != "undefined")
+				{
+					//待处理重定向
+				}
+				//处理页面信息
 				console.log(data);
 				for (index=0; index<page_ids_arr.length ; index++ )
 				{
 					//处理得到的标题们，会全部得到吗
-					//保存到一个临时表
+					//保存到一个临时表，用来供将来替换
 					//data.query.titles[data.query.pageids]
 				}
 				//再次push就好

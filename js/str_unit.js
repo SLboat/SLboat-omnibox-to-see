@@ -31,7 +31,7 @@ function str_getlast(text,how_long) {
 			"str": text.substr(0, text.length - how_long)
 		}; //返回一个原型包含位置和长度
 	}
-	return null; //送回一个空，不介意吧，不算太好的主意
+	return {"last":"", "str":""}; //送回一个空，不介意吧，不算太好的主意
 }
 
 /* 大写首字母的，别的的不变
