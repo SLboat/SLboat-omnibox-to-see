@@ -1,7 +1,6 @@
 var currentRequest = null; //当前请求
 
 //获得最后一个字符，看起来还有更好的方式啊
-
 function get_lastchar(text) {
 	if (text.length > 0) {
 		return {
@@ -10,6 +9,11 @@ function get_lastchar(text) {
 		}; //返回一个原型包含位置和长度
 	}
 	return null; //送回一个空，不介意吧
+}
+
+//大写首字母的，别的的不变
+function up_first_letter(text){
+	return text.charAt(0).toUpperCase()+text.substr(1,text.length);
 }
 
 //绑定输入事件
@@ -44,12 +48,12 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 			//这是每一个结果的处置
 			for (var index = 0; index < result_arry.length; index++) { //处理第一项
 				var data_take = result_arry[index]; //处理这个玩意
-				if (data_take==org_text) //完全匹配
+				if (data_take == up_first_letter(org_text)) //完全匹配-除了首字母
 				{
 					//一致提醒
 					if (isedit){
 							put_info("进入航海见识中立即开始<dim>编辑</dim>见识<url>[" + org_text + "]</url>！"); //处理不一致的文字
-					}else {put_info("探索到森亮号航海见识拥有完全匹配<url>["+ org_text + "]</url>的见识！");}
+					}else {put_info("噢!太好了!探索到存在<url>["+ org_text + "]</url>的见识!前往所在地吗?");}
 
 				}
 				//制造高亮玩意
@@ -65,7 +69,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 			suggest(results); //提交结果，完事
 		});
 	} else { //直接现实最近的
-		put_info("输入标题来探索航海见识,而这是[最近]见识：");
+		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 		currentRequest = get_recently(text, function (data) {
 			var results = [];
 			//todo：不要一次性算出两级，错误太多
