@@ -7,6 +7,7 @@ isdebug = true;
 /* 常规性配置 */
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var need_more = true; //需要更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
  * 返回构建：
@@ -61,10 +62,12 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
 		get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
-				//suggest(results); //传回建议的内容
-				get_more_info(text, results, org_data, function(results){
-					suggest(results); //传回最终研究内容
-				}); //呼叫下一回合
+				if (need_more) //需要更多信息，提醒应该换换
+				{
+					get_more_info(text, results, org_data, function(results){
+						suggest(results); //传回最终研究内容
+					}); //呼叫下一回合
+				}else{suggest(results)}; //传回建议的内容
 		});
 	} else { //直接现实最近的
 		slboat_getrecently(function (results) {
@@ -219,7 +222,7 @@ function get_more_info(text, faild_results, result_arry, callback) {
 			if (issth(titles_arr[title_get]) && titles_arr[title_get].to != "") //检查重定向
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
-				show_info += "重定向!它将带到<url>[" + title_get + "]</url>!\t";
+				show_info += "重定向!它将带到<url>[" + should_get + "]</url>!\t";
 			}
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
 			{
