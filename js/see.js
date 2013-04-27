@@ -1,6 +1,9 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com";
 
+/* 调试配置 */
+isdebug=true;
+
 /* 常规性配置 */
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者
@@ -54,15 +57,32 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	}
 
 	if (text.length > 0 && text != "最近" ) { //过滤最近，但不排除无
+		get_suggest(text,edit_type,str_new_win,function(results,org_data){ //原始数据为一个字串表
+			suggest(results); //传回建议的内容
+		});
+	} else { //直接现实最近的
+			slboat_getrecently(function(results){
+				suggest(results); //闭包回来处理
+			});
+  } //最终结束
+});
+
+/* 获得标题匹配见识
+ * 传入原始字串，标题特征，回调函数
+ * 回调建议结果，标题序列
+ * 最基础的变动匹配
+ * 它可能会很长
+ */
+ function get_suggest(text,edit_type,str_new_win,callback){
 		//处理增加模式
 		req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + text; //构造字串
 		//定义当前请求函数，以便后来请求
-		currentRequest = get_json(req_url, function (data, org_text) { //处理返回的json如何处置
+		currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 			var results = [];
 			//用于一个本地的保留备份
 			result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
 			if (result_arry.length == 0) {
-				return false; //退出
+				return false; //退出，将失去一切
 			}
 			//这是每一个结果的处置
 			for (var index = 0; index < result_arry.length; index++) { //处理第一项
@@ -85,45 +105,20 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 					description: match_str + "\t       <dim>->存在于在航海见识,正在更深入探索</dim>" //这是描述
 				});
 			}
-			//玩意不知道是干嘛的-它是直接传递给回调函数处理结果的玩意
-			suggest(results); //提交结果，完事
-			//等待更深一步探索
-			titles_all = result_arry.join("|"); //拼凑字符串，用于标题
-			req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles="+encodeURIComponent(titles_all);
-			//开始解析
-			currentRequest = get_json(req_url, function (data) {
-				var titles = []; //标题建立的一个查询队列
-				var page_ids_arr=data.query.pageids
-				if (page_ids_arr.length==0) //没有返回，几乎不会发生
-				{
-					put_info("更进一步探索失败了！"); //临时提醒
-					return false;
-					//提醒进一步获取失败？
-				}
-				//重定向解析
-				var redirects_arr=data.query.redirects
-				if (typeof(redirects_arr) != "undefined")
-				{
-					//待处理重定向
-				}
-				//处理页面信息
-				console.log(data);
-				for (index=0; index<page_ids_arr.length ; index++ )
-				{
-					//处理得到的标题们，会全部得到吗
-					//保存到一个临时表，用来供将来替换
-					//data.query.titles[data.query.pageids]
-				}
-				//再次push就好
-			})
-		
-		//结束处理搜索
-		});
-	} else { //直接现实最近的
+			//返回原始标题，以及结果
+			callback(results,data_take); //或许还要点别的？	
+		});//完成任务
+ }
+
+/* 获得最近的见识 
+ * 给予需要的，获得想要的
+*/
+function slboat_getrecently(callback){
 		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 		//todo，函数式改写，太有点混世了
 		//仅获得六个
 		req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew&rctoponly";
+		//如何移出去呢
 		currentRequest = get_json(req_url, function (data) {
 			var results = [];
 			//todo：不要一次性算出两级，错误太多
@@ -140,11 +135,10 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 					description: data_take + "\t       <dim>->最近的见识</dim><url>["+ index + "]</url>" //这是描述
 				});
 			}
-			suggest(results); //提交结果，完事
+			callback(results); //提交结果，完事
 		});
-		//处理完毕
-  }
-});
+}
+
 
 //恢复到默认玩意，没有任何提醒
 function resetDefaultSuggestion() {
@@ -249,4 +243,15 @@ tab_getnow = function () {
 	chrome.tabs.getSelected(function (tab) {
 		console.debug("当前的标签是:", tab); //tab.url 就是url地址了
 	});
+}
+
+/* 记录日志信息，简单的 
+ * 有时候简单或许就是更好的
+ */
+function log(info){
+	if (isdebug)
+	{
+		console.log("调试信息");
+	}
+
 }
