@@ -8,6 +8,8 @@ isdebug = true;
 /* 常规性配置 */
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var perfix_search_fulltext = "."; //搜索全部文本
+
 var need_more = true; //需要更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
@@ -86,7 +88,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
  */
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
-	req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + text; //构造字串
+	req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + encodeURIComponent(text); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		var results = [];
@@ -169,14 +171,6 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 	currentRequest = get_json(req_url, function (data) {
 		var results = []; //最终结果
 		var titles_arr = {}; //标题建立的一个查询队列
-		var page_ids_arr = data.query.pageids
-		if (page_ids_arr.length == 0) //没有返回，几乎不会发生
-		{
-			put_info("更进一步探索失败了！"); //临时提醒
-			return false;
-			//抛出错误？
-			//提醒进一步获取失败？
-		}
 		//重定向解析
 		var redirects_arr = data.query.redirects
 		if (issth(redirects_arr)) {
