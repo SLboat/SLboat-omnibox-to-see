@@ -5,7 +5,9 @@ var redict_text = {from:"", to:""}; //默认的重定向信息
 /* 调试配置 */
 isdebug = true;
 
-/* 常规性配置 */
+/* 常规性配置
+ * 可以量化为object？
+ */
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var perfix_search_fulltext = "."; //搜索全部文本
@@ -20,15 +22,24 @@ function edit_chk(text) { //检查编辑模式
 	var result = {
 		isedit: false,
 		isnew: false,
-		newtext: text
+		newtext: text,
+		isfind: false //搜索模式
 	}; //返回构造
 
-	if (str_chklast(text, perfix_edit) || str_chklast(text, perfix_edit_newtab)) {
+	if (str_chklast(text, perfix_edit)) {
 		result.isedit = true; //设置标记
 		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
 	}
+
 	if (str_chklast(text, perfix_edit_newtab)) {
+		result.isedit = true; //编辑模式
 		result.isnew = true; //单独的标记
+		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
+	}
+
+	if (str_chklast(text, perfix_search_fulltext)) { //防止冲突？
+		result.isfind = true; //单独的标记
+		result.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
 	}
 	return result; //返回构建
 }
@@ -65,20 +76,36 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 	redict_text = {from:"", to:""}; //初始化重定向信息
 	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
-		get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
-				if (need_more) //需要更多信息，提醒应该换换
-				{
-					get_more_info(text, edit_type, str_new_win, results, org_data, function(results){
-						suggest(results); //传回最终研究内容
-					}); //呼叫下一回合
-				}else{suggest(results)}; //传回建议的内容
-		});
+		if (edit_type.isfind) //搜索模式
+		{
+			get_search_text(text,function(results){
+					suggest(results); //搜索建议释放
+			});
+		}else{ //非搜索模式
+			get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
+					if (need_more) //需要更多信息，提醒应该换换
+					{
+						get_more_info(text, edit_type, str_new_win, results, org_data, function(results){
+							suggest(results); //传回最终研究内容
+						}); //呼叫下一回合
+					}else{suggest(results)}; //传回建议的内容
+			});
+		}
 	} else { //直接现实最近的
 		slboat_getrecently(function (results) {
 			suggest(results); //闭包回来处理
 		});
 	} //最终结束
 });
+
+/* 获得全文搜索建议
+ * 传入原始字串
+ * 回调搜索建议
+ * 它将会很酷
+ */
+function get_search_text(){
+
+}
 
 /* 获得标题匹配见识
  * 传入原始字串，标题特征，回调函数
@@ -252,9 +279,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 	//回调回去
 }
 
-
 /* 去除一切提醒的玩意 */
-
 function resetDefaultSuggestion() {
 	chrome.omnibox.setDefaultSuggestion({
 		description: ' '
@@ -342,15 +367,16 @@ function tab_new(url) {
  * 将：去往那个见识的地方
  */
 chrome.omnibox.onInputEntered.addListener(function (text) {
-	tips_title = "森亮Chrome扩展 森亮见识墨水/探索提醒"
+	tips_title = "森亮Chrome扩展 森亮见识墨水/探索提醒";
+	edit_type = edit_chk(text); //检查类型
+	text = edit_type.newtext; //文字也处理了
 	var edit_link = "http://see.sl088.com/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title="
-	if (str_chklast(text, perfix_edit_newtab)) { //一起+那就放回去
-		text=str_getlast(text,perfix_edit_newtab.length).str; //获得切割后的
+
+	if (edit_type.isnew) { //一起+那就放回去
 		tab_new(edit_link + chk_redict(text)); //处理重定向
 
-	} else if (str_chklast(text, perfix_edit)) {
-		text=str_getlast(text, perfix_edit_newtab.length).str; 
+	} else if (edit_type.isedit) {
 		tab_go(edit_link + chk_redict(text));
 
 	} else {
