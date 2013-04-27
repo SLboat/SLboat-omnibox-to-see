@@ -52,3 +52,12 @@ function ominibox_get_highline(title_get, text){
 		var match_str = title_get.replace(match_part, "<match>" + match_part + "</match>"); //高亮有的话，被处理了大小写
 		return match_str;
 }
+
+/* 匹配忽略大小写是否一致
+ * 传入比较1、比较2
+ * 返回是否非大小写一致
+ */
+ function str_is_about_same(a,b){
+	return (a.length==b.length && a.match(RegExp(b,"i"))!=null);
+
+ }

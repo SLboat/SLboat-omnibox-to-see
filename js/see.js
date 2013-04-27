@@ -98,15 +98,17 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//这是每一个结果的处置
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index]; //处理这个玩意
-			if (title_get == str_up1letter(text)) //完全匹配-除了首字母
+			if (str_is_about_same(title_get,text)) //完全匹配-除了大概一样
 			{
 				//一致提醒
 				if (edit_type.isedit) {
-					put_info("探索到了!" + str_new_win + "<url>重新</url	>见识<url>[" + text + "]</url>!"); //处理不一致的文字
+					put_info("探索到了!" + str_new_win + "<url>重新</url	>见识<url>[" + title_get + "]</url>!"); //处理不一致的文字
 				} else {
-					put_info("噢!太好了!探索到存在<url>[" + text + "]</url>的见识!前往所在地吗?");
+					put_info("噢!太好了!探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				}
-
+				//写入重定向
+				redict_text.from = text;
+				redict_text.to = title_get;
 			}
 			var match_str = ominibox_get_highline(title_get,text);
 			//push入数据，只是坏情况发生的时候
@@ -123,7 +125,6 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 /* 获得最近的见识 
  * 给予需要的，获得想要的
  */
-
 function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
@@ -154,7 +155,6 @@ function slboat_getrecently(callback) {
  * 传入键入字符，新窗口标记，编辑类型（用于标记重定向），初步获得见识信息，原始标题序列，回调结果函数
  * 回调输出结果-标准格式
  */
-
 function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
 	//等待更深一步探索
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
@@ -224,7 +224,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
 				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
-				if (title_get==text) //如果默认就有重定向
+				if (str_is_about_same(title_get,text)) //如果默认就有重定向，忽视大小写
 				{
 					redict_text.from = text;
 					redict_text.to = should_get;
@@ -243,6 +243,9 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				show_info += "存在于在航海见识\t更深入探索失败" //这是描述
 			}
 			show_info += "</dim>"; //匹配结束
+			if (title_get == text){ //完全一样会不显示
+			    title_get += "_"; //加一个无关紧要的进去
+			}
 			/* 构建最终返回字串 */
 			results.push({
 				content: title_get, //无所谓传入老的，因为新的会再次更新
