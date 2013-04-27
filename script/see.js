@@ -4,6 +4,7 @@ var redict_text = {
 	from: "",
 	to: ""
 }; //默认的重定向信息
+var freeze_flag = false;//冻结更新
 
 /* 调试配置 */
 isdebug = false;
@@ -77,6 +78,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 	var edit_type; //编辑模式的玩意
 
+	defreeze(); //解除冻结
 	//停止上次事件，看起来像是做了这个
 	if (currentRequest != null) {
 		log("终止上次事件") //打印容易得到null
@@ -98,10 +100,14 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	}
 	if (edit_type.iscopy) //复制模式
 	{
-		make_copy_text = "[[" + text + "]]";
-		copy_text(make_copy_text);
-		put_info("<url>[.c]</url>,看起来需要得到见识链接,已经将<url>" + make_copy_text + "</url>送到剪贴板");
-		return false; //到此结束
+		if (text.length==0)
+		{
+			put_info("<url>发现了[.c]</url>,看起来需要得到见识链接,但是<url>没有任何线索</url>给予,噢见鬼！");
+		}else{
+			make_copy_text = "[[" + text + "]]";
+			put_info("<url>发现了[.c]</url>,看来需要得到见识链接,但未检查到<url>" + make_copy_text + "</url>拥有完全匹配,将不复制");			
+		}
+		freeze(); //冻结显示栏
 	}
 	if (edit_type.isnew) {
 		//新的标记方式，字符串全部索引起来？
@@ -220,7 +226,13 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 				//一致提醒
 				if (edit_type.isedit) {
 					put_info("探索到了!" + str_new_win + "<url>重新</url	>见识<url>[" + title_get + "]</url>!"); //处理不一致的文字
-				} else {
+				} else if (edit_type.iscopy) {   //复制模式，最终效验
+					make_copy_text = "[[" + title_get + "]]";
+					copy_text(make_copy_text);
+					defreeze(); //临时解冻
+					put_info("已探索到<url>[.c]</url>是个完全匹配的见识,已经将处理后的<url>" + make_copy_text + "</url>送到剪贴板...");
+					freeze(); //继续冻结
+				}else {
 					put_info("噢!太好了!探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				}
 				//写入重定向
@@ -385,14 +397,21 @@ function resetDefaultSuggestion() {
 	});
 }
 
-//更新默认输入，也就是第一个玩意，当还没有结果返回的时候得到它
-//如果需要输入内容，那就输入%s
+/* 释放到提醒栏
+ * 如果需要输入内容，那就输入%s
+ * 全局标记冻结freeze_flag开启的话，不会更新
+ */
 
 function put_info(text) {
+	if (freeze_flag)
+	{
+		return false;//冻结了
+	}
 	//默认的只能传送文字，遗憾的
 	chrome.omnibox.setDefaultSuggestion({
 		description: text
 	});
+	return true;//释放了
 }
 
 // 开始输入，有了第一次反应
@@ -529,6 +548,17 @@ function chk_redict(text) {
 		text = redict_text.to; //去往重定向页
 	}
 	return text; //放回去
+}
+
+/* 互斥监督者，冻结提醒文字变动 */
+function freeze(){
+	//冻结信息提示
+	freeze_flag = true;
+}
+
+/* 互斥监督者，解除冻结提醒文字变动 */
+function defreeze(){
+	freeze_flag = false;
 }
 
 /* 最无用的家伙
