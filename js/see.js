@@ -1,5 +1,6 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com";
+var redict_text = {from:"", to:""}; //默认的重定向信息
 
 /* 调试配置 */
 isdebug = true;
@@ -60,11 +61,12 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
 
+	redict_text = {from:"", to:""}; //初始化重定向信息
 	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
 		get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
 				if (need_more) //需要更多信息，提醒应该换换
 				{
-					get_more_info(text, results, org_data, function(results){
+					get_more_info(text, edit_type, str_new_win, results, org_data, function(results){
 						suggest(results); //传回最终研究内容
 					}); //呼叫下一回合
 				}else{suggest(results)}; //传回建议的内容
@@ -82,7 +84,6 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
  * 最基础的变动匹配
  * 它可能会很长
  */
-
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
 	req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + text; //构造字串
@@ -150,11 +151,11 @@ function slboat_getrecently(callback) {
 }
 
 /* 获得进一步信息，更进一步 
- * 传入键入字符，初步获得见识信息，原始标题序列，回调结果函数
+ * 传入键入字符，新窗口标记，编辑类型（用于标记重定向），初步获得见识信息，原始标题序列，回调结果函数
  * 回调输出结果-标准格式
  */
 
-function get_more_info(text, faild_results, result_arry, callback) {
+function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
 	//等待更深一步探索
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
@@ -222,7 +223,17 @@ function get_more_info(text, faild_results, result_arry, callback) {
 			if (issth(titles_arr[title_get]) && titles_arr[title_get].to != "") //检查重定向
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
-				show_info += "重定向!它将带到<url>[" + should_get + "]</url>!\t";
+				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
+				if (title_get==text) //如果默认就有重定向
+				{
+					redict_text.from = text;
+					redict_text.to = should_get;
+					if (edit_type.isedit) {
+						put_info("探索到了!但它去往<url>被指引</url>," + str_new_win + "<url>重新</url	>见识<url>[" + should_get + "]</url>!"); //处理不一致的文字
+					} else {
+						put_info("噢!太好了!探索到存在，只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
+					}
+				}
 			}
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
 			{
@@ -234,7 +245,7 @@ function get_more_info(text, faild_results, result_arry, callback) {
 			show_info += "</dim>"; //匹配结束
 			/* 构建最终返回字串 */
 			results.push({
-				content: should_get,
+				content: title_get, //无所谓传入老的，因为新的会再次更新
 				description: show_info //这是描述
 			});
 		}
@@ -338,11 +349,12 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 	var edit_link = "http://see.sl088.com/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title="
 	if (str_chklast(text, perfix_edit_newtab)) { //一起+那就放回去
-		//新增加一个玩意
-		tab_new(edit_link + str_getlast(text, perfix_edit_newtab.length).str); //末尾多算一点
+		text=str_getlast(text,perfix_edit_newtab.length).str; //获得切割后的
+		tab_new(edit_link + chk_redict(text)); //处理重定向
 
 	} else if (str_chklast(text, perfix_edit)) {
-		tab_go(edit_link + str_getlast(text, perfix_edit_newtab.length).str);
+		text=str_getlast(text, perfix_edit_newtab.length).str; 
+		tab_go(edit_link + chk_redict(text));
 
 	} else {
 		//正常情况下，当一样的时候让它自己跳转
@@ -376,3 +388,14 @@ function log(info) {
 function issth(anything) {
 	return typeof (anything) != "undefined";
 }
+
+/* 处理重定向信息 
+ * 返回处理后的重定向信息
+ */
+ function chk_redict(text){
+ 	if (redict_text.from==text && redict_text.to!="") //有重定向信息
+	{
+		text=redict_text.to; //去往重定向页
+	}
+	return text; //放回去
+ }
