@@ -10,13 +10,17 @@ isdebug = false;
 
 /* 常规性配置
  * 可以量化为object？
+ * 支持array方式？多种匹配？
  */
+var perfix_copy = ".c"; //从标题复制文本
+var perfix_help = ".?"; //提供帮助信息
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
-var perfix_search = "."; //从标题到达文本
+var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索
 var perfix_search_ime= "。"; //输入法生成的全角也认
 var perfix_search_fulltext = "-"; //仅搜索全部文本
 
+/* 其他配置，将来可设置 */
 var need_more = true; //需要更多信息，用来过滤更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
@@ -30,10 +34,18 @@ function edit_chk(text) { //检查编辑模式
 		isnew: false,
 		newtext: text,
 		isfind: false, //搜索模式
-		onlytxt: false //只搜索标题
+		onlytxt: false, //只搜索标题
+		iscopy: false, //需要复制
+		ishelp: false
 	}; //返回构造
 
-	if (str_chklast(text, perfix_edit)) { //当前标签编辑
+	if (str_chklast(text, perfix_help)) { //当前标签编辑
+		result.ishelp = true;
+		result.newtext = str_getlast(text, perfix_help.length).str; //返回剩余的一部分
+	}else if (str_chklast(text, perfix_copy)) { //当前标签编辑
+		result.iscopy = true; //设置标记
+		result.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
+	}else	if (str_chklast(text, perfix_edit)) { //当前标签编辑
 		result.isedit = true; //设置标记
 		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
 	}else	if (str_chklast(text, perfix_edit_newtab)) { //新标签编辑
@@ -78,6 +90,19 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	//处理编辑模式字符，看起来没啥坏处
 	edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
+	if (edit_type.ishelp) {//一些帮助{
+		get_help(function(results){
+			suggest(results); //回调输出			
+		});
+		return true;//离开
+	}
+	if (edit_type.iscopy) //复制模式
+	{
+		make_copy_text = "[[" + text + "]]";
+		copy_text(make_copy_text);
+		put_info("<url>[.c]</url>,看起来需要得到见识链接,已经将<url>" + make_copy_text + "</url>送到剪贴板");
+		return false; //到此结束
+	}
 	if (edit_type.isnew) {
 		//新的标记方式，字符串全部索引起来？
 		str_new_win = "进入<url>最近的海域</url>";
@@ -90,7 +115,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		from: "",
 		to: ""
 	}; //初始化重定向信息
-	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
+	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无
 		if (edit_type.isfind) //搜索模式
 		{
 			var results = []; //未来的种子
@@ -110,6 +135,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 			});
 		}
 	} else { //直接现实最近的
+		//todo: [last]也支持如何
 		slboat_getrecently(function (results) {
 			suggest(results); //闭包回来处理
 		});
@@ -503,4 +529,41 @@ function chk_redict(text) {
 		text = redict_text.to; //去往重定向页
 	}
 	return text; //放回去
+}
+
+/* 最无用的家伙
+ * 显示一些帮助
+ */
+function get_help(callback){
+		//可能不是及时更新，切当看看
+		put_info ('欢迎使用森亮号航海见识探索,下面是<url>航海见识探索</url>的一些认知执行操作:');
+		var results = [];//初始化提醒
+		//编辑模式
+		results.push({
+			content: "简单匹配.?", //更细致的？哦不。。
+			description: "<dim>简单匹配</dim>    <url>[(见识标题的一部分)" +"]</url>:从头开始模糊匹配,如果<url>探索不充分</url>,将再从内容里继续匹配"
+		});
+		//编辑模式
+		results.push({
+			content: "编辑模式.?", //更细致的？哦不。。
+			description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit  + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab   + "]</url>:附近窗口编辑 "
+		});
+		//搜索模式
+		results.push({
+			content: "搜索模式.?", //更细致的？哦不。。
+			description: "<dim>搜索模式</dim>    <url>[(见识标题)" + perfix_search  + "]、全角[" + perfix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + perfix_search_fulltext    + "]</url>:仅仅搜索见识正文"
+		});
+		//搜索模式
+		results.push({
+			content: "别的玩意.?", //更细致的？哦不。。
+			description: "<dim>别的玩意</dim>    <url>[(见识标题)" + perfix_copy  + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + perfix_help     + "]</url>:提供本帮助信息而已"
+		});
+		//去往主页
+		results.push({
+			content: "航海见识探索", //更细致的？哦不。。
+			description: "<dim>去往巢穴</dim>   <url>[航海见识探索]</url>:选择我, 去往我的孵育地.....\t  \t以及还有<url>[ ],[.last],[最近]</url>:获得最近的见识"
+		});
+		//别的玩意
+		callback(results);//返回
+		return true;
 }

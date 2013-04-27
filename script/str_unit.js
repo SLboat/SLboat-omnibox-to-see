@@ -81,3 +81,13 @@ function str_is_about_same(a, b) {
 	return (a.length == b.length && a.match(RegExp(b, "i")) != null);
 
 }
+
+/* 复制文本到剪贴板里这样送出去咯 */
+function copy_text(text) {
+	//todo：检查些之前内容啥的
+	var inkstand = document.getElementById('inkstand'); //不需要使用jQuery
+	inkstand.value = text;
+	inkstand.select();
+	var rv = document.execCommand("copy"); //执行复制到这里
+	return rv; //返回这玩意的执行
+}
