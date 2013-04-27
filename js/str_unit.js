@@ -40,3 +40,15 @@ function str_getlast(text,how_long) {
 function str_up1letter(text){
 	return text.charAt(0).toUpperCase()+text.substr(1,text.length);
 }
+
+/* 高亮匹配的部分-使用<match>语法
+ *	传入获得的完整标题，输入的字符
+ * 传回匹配串
+ */
+function ominibox_get_highline(title_get, text){
+		//制造高亮玩意
+		var text_re = new RegExp(text, "i");
+		var match_part = title_get.match(text_re);
+		var match_str = title_get.replace(match_part, "<match>" + match_part + "</match>"); //高亮有的话，被处理了大小写
+		return match_str;
+}
