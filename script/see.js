@@ -257,6 +257,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
  */
 
 function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
+	//todo: 增加提醒信息？堆栈保存上次的，然后再恢复？
 	//等待更深一步探索
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
@@ -324,7 +325,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 					if (edit_type.isedit) {
 						put_info("探索到了!但它去往<url>被指引</url>," + str_new_win + "<url>重新</url	>见识<url>[" + should_get + "]</url>!"); //处理不一致的文字
 					} else {
-						put_info("噢!太好了!探索到存在，只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
+						put_info("噢!太好了!探索到存在,只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
 					}
 				}
 			}
