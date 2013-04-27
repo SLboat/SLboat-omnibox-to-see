@@ -53,6 +53,19 @@ function ominibox_get_highline(title_get, text){
 		return match_str;
 }
 
+/* 转换search返回的sniff的匹配字串
+ * 输入原始的字串
+ * 返回转换的字串
+ */
+function slboat_get_match(snippet){
+	//转换左标签
+	snippet=snippet.replace(/<span class='searchmatch'>/g,"<match>");
+	//转换右标签
+	snippet=snippet.replace(/<\/span>/g,"</match>");
+	//todo:切割长度？
+	return snippet;
+}
+
 /* 匹配忽略大小写是否一致
  * 传入比较1、比较2
  * 返回是否非大小写一致

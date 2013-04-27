@@ -3,16 +3,17 @@ var site_url = "http://see.sl088.com";
 var redict_text = {from:"", to:""}; //默认的重定向信息
 
 /* 调试配置 */
-isdebug = true;
+isdebug = false;
 
 /* 常规性配置
  * 可以量化为object？
  */
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
-var perfix_search_fulltext = "."; //搜索全部文本
+var perfix_search = "."; //从标题到达文本
+var perfix_search_fulltext = "-"; //仅搜索全部文本
 
-var need_more = true; //需要更多信息
+var need_more = true; //需要更多信息，用来过滤更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
  * 返回构建：
@@ -23,7 +24,8 @@ function edit_chk(text) { //检查编辑模式
 		isedit: false,
 		isnew: false,
 		newtext: text,
-		isfind: false //搜索模式
+		isfind: false, //搜索模式
+		onlytxt: false //只搜索标题
 	}; //返回构造
 
 	if (str_chklast(text, perfix_edit)) {
@@ -36,11 +38,18 @@ function edit_chk(text) { //检查编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
 	}
+	
+	if (str_chklast(text, perfix_search)) { //防止冲突？
+		result.isfind = true; //单独的标记
+		result.newtext = str_getlast(text, perfix_search.length).str; //切除
+	}
 
 	if (str_chklast(text, perfix_search_fulltext)) { //防止冲突？
-		result.isfind = true; //单独的标记
+		result.isfind = true; //寻找模式
+		result.onlytxt = true; //紧紧全文
 		result.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
 	}
+
 	return result; //返回构建
 }
 
@@ -56,6 +65,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 	//停止上次事件，看起来像是做了这个
 	if (currentRequest != null) {
+		log("终止上次事件") //打印容易得到null
 		currentRequest.onreadystatechange = null;
 		currentRequest.abort();
 		currentRequest = null;
@@ -78,12 +88,13 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
 		if (edit_type.isfind) //搜索模式
 		{
-			get_search_text(text,function(results){
+			var results = []; //未来的种子
+			get_search_text(text, edit_type.onlytxt, results, function(results){
 					suggest(results); //搜索建议释放
-			});
+			}, false); //非最后一次
 		}else{ //非搜索模式
 			get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
-					if (need_more) //需要更多信息，提醒应该换换
+					if (need_more && issth(org_data)) //需要更多信息，提醒应该换换，有得到原始字串
 					{
 						get_more_info(text, edit_type, str_new_win, results, org_data, function(results){
 							suggest(results); //传回最终研究内容
@@ -99,12 +110,53 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 });
 
 /* 获得全文搜索建议
- * 传入原始字串
+ * 传入原始字串，只搜索标题，上次的结果-递归
  * 回调搜索建议
  * 它将会很酷
+ * todo:如果错误，尝试丢回上一次信息
  */
-function get_search_text(){
+function get_search_text(text, search_text,results, callback, lastsearch){
+	var near_str=""; //接近提示
+	if (search_text)
+	{
+		strwhat= "text";
+		near_str= "\t  <url>--></url><dim>见识接近内容:</dim>";
+	}else{
+		strwhat= "title"; //标题好的
+		near_str= "\t  <url>--></url><dim>见识接近标题:</dim>";
+	}
+	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=6&gcllimit=10&srsearch=" + encodeURIComponent(text); 
+	req_url +=  "&srwhat=" + strwhat; //搜索类型
+	//开始呼叫
+	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
+		log("搜索得到了",data);
+		var search_result=data.query.search; //返回结果
+		if (lastsearch && search_result.length==0) //到最后一步了
+		{
+			put_info("探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>"+ text + "</match>]"); //发绿？
+			return false;
+		}
+		//开始释放结果
+		for (var index=0;index<search_result.length;index++ ) //递归啊，建造啊
+		{
+			title_get=search_result[index].title; //标题好吗，模糊标题一样
+			diff_info=slboat_get_match(search_result[index].snippet); //匹配内容
+			//push入数据
+			results.push({
+				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
+				description: title_get + near_str + diff_info //这是描述
+			});
+		}
+		if (!lastsearch && search_result.length<5) //结果不足
+		{
+			//递归
+			get_search_text(text, !search_text, results, callback, true)
+		}else{
+			callback(results); //回调回去
+			return true;
+		}
 
+	});//回调结束
 }
 
 /* 获得标题匹配见识
@@ -122,7 +174,9 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//用于一个本地的保留备份
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
 		if (result_arry.length == 0) {
-			return false; //退出，将失去一切
+			//切换到别的方式去
+			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
+			return true; //退出，将失去一切
 		}
 		//这是每一个结果的处置
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
@@ -149,35 +203,6 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//返回原始标题，以及结果
 		callback(results, result_arry); //或许还要点别的？	
 	}); //完成任务
-}
-
-/* 获得最近的见识 
- * 给予需要的，获得想要的
- */
-function slboat_getrecently(callback) {
-	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
-	//todo，函数式改写，太有点混世了
-	//仅获得六个
-	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew&rctoponly";
-	//如何移出去呢
-	currentRequest = get_json(req_url, function (data) {
-		var results = [];
-		//todo：不要一次性算出两级，错误太多
-		var result_arry = data.query.recentchanges; //返回的数组，长度0就是没有结果
-		if (typeof (result_arry) == "undefined") {
-			return false; //无效退出
-		}
-		//这是每一个结果的处置
-		for (var index = 0; index < result_arry.length; index++) { //处理第一项
-			var title_get = result_arry[index].title //处理这个玩意
-			//push入数据
-			results.push({
-				content: title_get, //这是发送给输入事件的数据
-				description: title_get + "\t       <dim>->最近的见识</dim><url>[" + index + "]</url>" //这是描述
-			});
-		}
-		callback(results); //提交结果，完事
-	});
 }
 
 /* 获得进一步信息，更进一步 
@@ -273,10 +298,47 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				description: show_info //这是描述
 			});
 		}
-		callback(results); //提交结果，完事
-		//再次push就好
+		//处理是否需要再次提交
+		if (result_arry.length<2 && redict_text.from != text ) //太少结果了，没有完全匹配
+		{
+			//将未完成的结果传出去
+			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
+		}else{
+			callback(results); //提交结果，完事
+			return false;
+		}
+		
 	}, onfaild)
 	//回调回去
+}
+
+/* 获得最近的见识 
+ * 给予需要的，获得想要的
+ */
+function slboat_getrecently(callback) {
+	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
+	//todo，函数式改写，太有点混世了
+	//仅获得六个
+	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew&rctoponly";
+	//如何移出去呢
+	currentRequest = get_json(req_url, function (data) {
+		var results = [];
+		//todo：不要一次性算出两级，错误太多
+		var result_arry = data.query.recentchanges; //返回的数组，长度0就是没有结果
+		if (typeof (result_arry) == "undefined") {
+			return false; //无效退出
+		}
+		//这是每一个结果的处置
+		for (var index = 0; index < result_arry.length; index++) { //处理第一项
+			var title_get = result_arry[index].title //处理这个玩意
+			//push入数据
+			results.push({
+				content: title_get, //这是发送给输入事件的数据
+				description: title_get + "\t       <dim>->最近的见识</dim><url>[" + index + "]</url>" //这是描述
+			});
+		}
+		callback(results); //提交结果，完事
+	});
 }
 
 /* 去除一切提醒的玩意 */
@@ -398,10 +460,12 @@ tab_getnow = function () {
  * 有时候简单或许就是更好的
  */
 
-function log(info) {
-	if (isdebug) {
+function log(info,date) {
+	if (!isdebug) return false; //返回
+	if (typeof(date)=="undefined"){
 		console.log("调试信息：", info);
-	}
+	}else{	console.log("调试信息：", info, date);}
+	return true; 
 }
 
 /* 判断是否是一些东西
