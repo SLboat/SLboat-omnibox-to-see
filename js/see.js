@@ -1,6 +1,9 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com";
-var redict_text = {from:"", to:""}; //默认的重定向信息
+var redict_text = {
+	from: "",
+	to: ""
+}; //默认的重定向信息
 
 /* 调试配置 */
 isdebug = false;
@@ -11,6 +14,7 @@ isdebug = false;
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var perfix_search = "."; //从标题到达文本
+var perfix_search_ime= "。"; //输入法生成的全角也认
 var perfix_search_fulltext = "-"; //仅搜索全部文本
 
 var need_more = true; //需要更多信息，用来过滤更多信息
@@ -19,6 +23,7 @@ var need_more = true; //需要更多信息，用来过滤更多信息
  * 返回构建：
  * isedit:是否编辑，isnew:是否新建，newtext:过滤后的文字
  */
+
 function edit_chk(text) { //检查编辑模式
 	var result = {
 		isedit: false,
@@ -28,23 +33,20 @@ function edit_chk(text) { //检查编辑模式
 		onlytxt: false //只搜索标题
 	}; //返回构造
 
-	if (str_chklast(text, perfix_edit)) {
+	if (str_chklast(text, perfix_edit)) { //当前标签编辑
 		result.isedit = true; //设置标记
 		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
-	}
-
-	if (str_chklast(text, perfix_edit_newtab)) {
+	}else	if (str_chklast(text, perfix_edit_newtab)) { //新标签编辑
 		result.isedit = true; //编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
-	}
-	
-	if (str_chklast(text, perfix_search)) { //防止冲突？
+	}else	if (str_chklast(text, perfix_search)) { //搜索内容
 		result.isfind = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_search.length).str; //切除
-	}
-
-	if (str_chklast(text, perfix_search_fulltext)) { //防止冲突？
+	}else	if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
+		result.isfind = true; //单独的标记
+		result.newtext = str_getlast(text, perfix_search_ime.length).str; //切除
+	}else	if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
 		result.isfind = true; //寻找模式
 		result.onlytxt = true; //紧紧全文
 		result.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
@@ -84,22 +86,27 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
 
-	redict_text = {from:"", to:""}; //初始化重定向信息
+	redict_text = {
+		from: "",
+		to: ""
+	}; //初始化重定向信息
 	if (text.length > 0 && text != "最近") { //过滤最近，但不排除无
 		if (edit_type.isfind) //搜索模式
 		{
 			var results = []; //未来的种子
-			get_search_text(text, edit_type.onlytxt, results, function(results){
-					suggest(results); //搜索建议释放
+			get_search_text(text, edit_type.onlytxt, results, function (results) {
+				suggest(results); //搜索建议释放
 			}, false); //非最后一次
-		}else{ //非搜索模式
+		} else { //非搜索模式
 			get_suggest(text, edit_type, str_new_win, function (results, org_data) { //原始数据为一个字串表
-					if (need_more && issth(org_data)) //需要更多信息，提醒应该换换，有得到原始字串
-					{
-						get_more_info(text, edit_type, str_new_win, results, org_data, function(results){
-							suggest(results); //传回最终研究内容
-						}); //呼叫下一回合
-					}else{suggest(results)}; //传回建议的内容
+				if (need_more && issth(org_data)) //需要更多信息，提醒应该换换，有得到原始字串
+				{
+					get_more_info(text, edit_type, str_new_win, results, org_data, function (results) {
+						suggest(results); //传回最终研究内容
+					}); //呼叫下一回合
+				} else {
+					suggest(results)
+				}; //传回建议的内容
 			});
 		}
 	} else { //直接现实最近的
@@ -115,48 +122,48 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
  * 它将会很酷
  * todo:如果错误，尝试丢回上一次信息
  */
-function get_search_text(text, search_text,results, callback, lastsearch){
-	var near_str=""; //接近提示
-	if (search_text)
-	{
-		strwhat= "text";
-		near_str= "\t  <url>--></url><dim>见识接近内容:</dim>";
-	}else{
-		strwhat= "title"; //标题好的
-		near_str= "\t  <url>--></url><dim>见识接近标题:</dim>";
+
+function get_search_text(text, search_text, results, callback, lastsearch) {
+	var near_str = ""; //接近提示
+	if (search_text) {
+		strwhat = "text";
+		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
+	} else {
+		strwhat = "title"; //标题好的
+		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
-	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=6&gcllimit=10&srsearch=" + encodeURIComponent(text); 
-	req_url +=  "&srwhat=" + strwhat; //搜索类型
+	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=6&gcllimit=10&srsearch=" + encodeURIComponent(text);
+	req_url += "&srwhat=" + strwhat; //搜索类型
 	//开始呼叫
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
-		log("搜索得到了",data);
-		var search_result=data.query.search; //返回结果
-		if (lastsearch && search_result.length==0) //到最后一步了
+		log("搜索得到了", data);
+		var search_result = data.query.search; //返回结果
+		if (lastsearch && search_result.length == 0) //到最后一步了
 		{
-			put_info("探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>"+ text + "</match>]"); //发绿？
+			put_info("探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
 			return false;
 		}
 		//开始释放结果
-		for (var index=0;index<search_result.length;index++ ) //递归啊，建造啊
+		for (var index = 0; index < search_result.length; index++) //递归啊，建造啊
 		{
-			title_get=search_result[index].title; //标题好吗，模糊标题一样
-			diff_info=slboat_get_match(search_result[index].snippet); //匹配内容
+			title_get = search_result[index].title; //标题好吗，模糊标题一样
+			diff_info = slboat_get_match(search_result[index].snippet); //匹配内容
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 				description: title_get + near_str + diff_info //这是描述
 			});
 		}
-		if (!lastsearch && search_result.length<5) //结果不足
+		if (!lastsearch && search_result.length < 5) //结果不足
 		{
 			//递归
 			get_search_text(text, !search_text, results, callback, true)
-		}else{
+		} else {
 			callback(results); //回调回去
 			return true;
 		}
 
-	});//回调结束
+	}); //回调结束
 }
 
 /* 获得标题匹配见识
@@ -165,6 +172,7 @@ function get_search_text(text, search_text,results, callback, lastsearch){
  * 最基础的变动匹配
  * 它可能会很长
  */
+
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
 	req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + encodeURIComponent(text); //构造字串
@@ -181,7 +189,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//这是每一个结果的处置
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index]; //处理这个玩意
-			if (str_is_about_same(title_get,text)) //完全匹配-除了大概一样
+			if (str_is_about_same(title_get, text)) //完全匹配-除了大概一样
 			{
 				//一致提醒
 				if (edit_type.isedit) {
@@ -193,7 +201,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 				redict_text.from = text;
 				redict_text.to = title_get;
 			}
-			var match_str = ominibox_get_highline(title_get,text);
+			var match_str = ominibox_get_highline(title_get, text);
 			//push入数据，只是坏情况发生的时候
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
@@ -209,11 +217,12 @@ function get_suggest(text, edit_type, str_new_win, callback) {
  * 传入键入字符，新窗口标记，编辑类型（用于标记重定向），初步获得见识信息，原始标题序列，回调结果函数
  * 回调输出结果-标准格式
  */
+
 function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
 	//等待更深一步探索
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
-	var onfaild=function(e) //如果发生了错误
+	var onfaild = function (e) //如果发生了错误
 	{
 		put_info("更深入探索见识的时候发生了些意外: [" + e.message + "], 这是初步探索");
 		callback(faild_results); //传回失败的数据
@@ -262,7 +271,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index];
 			var should_get = title_get; //将调查的数据
-			var match_str = ominibox_get_highline(title_get,text); //匹配标题
+			var match_str = ominibox_get_highline(title_get, text); //匹配标题
 			var def_show_info = match_str + "\t       <dim>-->"; //默认标题信息
 			var show_info = def_show_info; //探索进一步的信息串
 			//todo，匹配信息
@@ -270,7 +279,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
 				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
-				if (str_is_about_same(title_get,text)) //如果默认就有重定向，忽视大小写
+				if (str_is_about_same(title_get, text)) //如果默认就有重定向，忽视大小写
 				{
 					redict_text.from = text;
 					redict_text.to = should_get;
@@ -289,8 +298,8 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				show_info += "存在于在航海见识\t更深入探索失败" //这是描述
 			}
 			show_info += "</dim>"; //匹配结束
-			if (title_get == text){ //完全一样会不显示
-			    title_get += "_"; //加一个无关紧要的进去
+			if (title_get == text) { //完全一样会不显示
+				title_get += "_"; //加一个无关紧要的进去
 			}
 			/* 构建最终返回字串 */
 			results.push({
@@ -299,15 +308,15 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			});
 		}
 		//处理是否需要再次提交
-		if (result_arry.length<2 && redict_text.from != text ) //太少结果了，没有完全匹配
+		if (result_arry.length < 2 && redict_text.from != text) //太少结果了，没有完全匹配
 		{
 			//将未完成的结果传出去
 			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
-		}else{
+		} else {
 			callback(results); //提交结果，完事
 			return false;
 		}
-		
+
 	}, onfaild)
 	//回调回去
 }
@@ -315,6 +324,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 /* 获得最近的见识 
  * 给予需要的，获得想要的
  */
+
 function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
@@ -342,6 +352,7 @@ function slboat_getrecently(callback) {
 }
 
 /* 去除一切提醒的玩意 */
+
 function resetDefaultSuggestion() {
 	chrome.omnibox.setDefaultSuggestion({
 		description: ' '
@@ -379,12 +390,15 @@ function put_error(e) {
  * 传入寻找地址，回调函数
  * todo：增加一个onerror处理事件，用来比如不能获得进一步信息
  */
+
 function get_json(req_url, callback, onerror) {
 	var req = new XMLHttpRequest();
-	if (typeof(onerror) == "function")//如果是函数
+	if (typeof (onerror) == "function") //如果是函数
 	{
-		errhand=onerror;
-	}else{errhand=put_error;}
+		errhand = onerror;
+	} else {
+		errhand = put_error;
+	}
 	req.open("GET", req_url, true);
 	req.onload = function () {
 		if (this.status == 200) {
@@ -460,18 +474,21 @@ tab_getnow = function () {
  * 有时候简单或许就是更好的
  */
 
-function log(info,date) {
+function log(info, date) {
 	if (!isdebug) return false; //返回
-	if (typeof(date)=="undefined"){
+	if (typeof (date) == "undefined") {
 		console.log("调试信息：", info);
-	}else{	console.log("调试信息：", info, date);}
-	return true; 
+	} else {
+		console.log("调试信息：", info, date);
+	}
+	return true;
 }
 
 /* 判断是否是一些东西
  * 而不是未定义-undefined
  * todo：字符串加上自动判断""?
  */
+
 function issth(anything) {
 	return typeof (anything) != "undefined";
 }
@@ -479,10 +496,11 @@ function issth(anything) {
 /* 处理重定向信息 
  * 返回处理后的重定向信息
  */
- function chk_redict(text){
- 	if (redict_text.from==text && redict_text.to!="") //有重定向信息
+
+function chk_redict(text) {
+	if (redict_text.from == text && redict_text.to != "") //有重定向信息
 	{
-		text=redict_text.to; //去往重定向页
+		text = redict_text.to; //去往重定向页
 	}
 	return text; //放回去
- }
+}
