@@ -1,6 +1,6 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com"; //请求站点
-var freeze_flag = false;//冻结更新
+var freeze_flag = false; //冻结更新
 
 /* 调试配置 */
 isdebug = false;
@@ -15,7 +15,7 @@ var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var perfix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
-var perfix_search_ime= "。"; //输入法生成的全角也认
+var perfix_search_ime = "。"; //输入法生成的全角也认
 var perfix_search_fulltext = "-"; //仅搜索全部文本
 
 /* 其他配置，将来可设置 */
@@ -41,29 +41,29 @@ function edit_chk(text) { //检查编辑模式
 	if (str_chklast(text, perfix_help)) { //当前标签编辑
 		result.ishelp = true;
 		result.newtext = str_getlast(text, perfix_help.length).str; //返回剩余的一部分
-	}else if (str_chklast(text, perfix_copy)) { //当前标签编辑
+	} else if (str_chklast(text, perfix_copy)) { //当前标签编辑
 		result.iscopy = true; //设置标记
 		result.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
-	}else	if (str_chklast(text, perfix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
+	} else if (str_chklast(text, perfix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
 		result.isedit = true; //编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
-	}else	if (str_chklast(text, perfix_edit)) { //当前标签编辑
+	} else if (str_chklast(text, perfix_edit)) { //当前标签编辑
 		result.isedit = true; //设置标记
 		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
-	}else	if (str_chklast(text, perfix_edit_newtab_oldway)) { //新标签编辑，老方式
+	} else if (str_chklast(text, perfix_edit_newtab_oldway)) { //新标签编辑，老方式
 		result.isedit = true; //编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
-	}else	if (str_chklast(text, perfix_search)) { //搜索内容
+	} else if (str_chklast(text, perfix_search)) { //搜索内容
 		result.isfind = true; //单独的标记
 		//切割获得次数
-		result.Srpages=str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
+		result.Srpages = str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
 		result.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
-	}else	if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
+	} else if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
 		result.isfind = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_search_ime.length).str; //切除
-	}else	if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
+	} else if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
 		result.isfind = true; //寻找模式
 		result.onlytxt = true; //紧紧全文
 		result.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
@@ -94,20 +94,19 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	//处理编辑模式字符，看起来没啥坏处
 	edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
-	if (edit_type.ishelp) {//一些帮助{
-		get_help(function(results){
+	if (edit_type.ishelp) { //一些帮助{
+		get_help(function (results) {
 			suggest(results); //回调输出			
 		});
-		return true;//离开
+		return true; //离开
 	}
 	if (edit_type.iscopy) //复制模式
 	{
-		if (text.length==0)
-		{
+		if (text.length == 0) {
 			put_info("<url>发现了[.c]</url>,看起来需要得到见识链接,但是<url>没有任何线索</url>给予,噢见鬼！");
-		}else{
+		} else {
 			make_copy_text = "[[" + text + "]]";
-			put_info("<url>发现了[.c]</url>,看来需要得到见识链接,但未检查到<url>" + make_copy_text + "</url>拥有完全匹配,将不复制");			
+			put_info("<url>发现了[.c]</url>,看来需要得到见识链接,但未检查到<url>" + make_copy_text + "</url>拥有完全匹配,将不复制");
 		}
 		freeze(); //冻结显示栏
 	}
@@ -119,7 +118,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
 
-	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text +"</match>]");
+	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
 
 	//重定向无需初始化
 	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无
@@ -159,18 +158,19 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
-	var pages=edit_type.Srpages;//页数，1开始
-	var has_next_page = false;//没有下一页
+	var pages = edit_type.Srpages; //页数，1开始
+	var has_next_page = false; //没有下一页
 	//超过一页，不搜索标题先了
-	if (pages>1)
-	{
-		search_text=true;
-	}else{
+	if (pages > 1) {
+		search_text = true;
+	} else {
 		//进行必要的搜索反转
-		if(!lastsearch){
+		if (!lastsearch) {
 			//非最后一次搜索，原始一样
-			search_text=edit_type.onlytxt;
-		}else{	search_text=!edit_type.onlytxt;} //反转搜索
+			search_text = edit_type.onlytxt;
+		} else {
+			search_text = !edit_type.onlytxt;
+		} //反转搜索
 	}
 	if (search_text) {
 		strwhat = "text";
@@ -180,37 +180,34 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
 	var page_info = "当前探索到第" + pages + "页";
-	if (pages=1)
-	{
-		prefix="入口处...";
-		page_info="当前探索到入口处"
-	}else{
-		prefix="深入的<url>第"+ pages+"页</url>";
+	if (pages = 1) {
+		prefix = "入口处...";
+		page_info = "当前探索到入口处"
+	} else {
+		prefix = "深入的<url>第" + pages + "页</url>";
 	}
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
 	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&gcllimit=10&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
-	if (pages>1)
-	{
-		req_url += "&sroffset=" + pages*5; //搜索页数，每页五项
+	if (pages > 1) {
+		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
 	}
 	//开始呼叫
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		log("搜索得到了", data);
-		if (data["query-continue"]!==undefined)//拥有下一页的玩意
+		if (data["query-continue"] !== undefined) //拥有下一页的玩意
 		{
-			has_next_page=true; //还有更多页
-			page_info=page_info+",探索到还有<dim>[第"+(pages +1) +"页]</dim>";
+			has_next_page = true; //还有更多页
+			page_info = page_info + ",探索到还有<dim>[第" + (pages + 1) + "页]</dim>";
 		}
 		var search_result = data.query.search; //返回结果
-		if (lastsearch && search_result.length == 0 && results.length==0) //到最后一步了，全局是0
+		if (lastsearch && search_result.length == 0 && results.length == 0) //到最后一步了，全局是0
 		{
 			var perfix_info = "";
-			if (pages>1)
-			{
-				perfix_info="在" + pages + "页"
+			if (pages > 1) {
+				perfix_info = "在" + pages + "页"
 			}
 			put_info(perfix_info + "探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
 			return false;
@@ -220,15 +217,15 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		{
 			title_get = search_result[index].title; //标题好吗，模糊标题一样
 			diff_info = slboat_get_match(search_result[index].snippet); //匹配内容
-			if (diff_info.length<1) //没有过多信息
-			{				
+			if (diff_info.length < 1) //没有过多信息
+			{
 				//通常的它们会混在一起
 				if (str_is_about_same(text, title_get)) //一致化了 
 				{
-					normal_list.push(text, title_get);//送入规格化信息
-					diff_info="<dim>我没看错的话!它们是完全一样的!</dim>"
-				}else
-					diff_info="<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>" ;
+					normal_list.push(text, title_get); //送入规格化信息
+					diff_info = "<dim>我没看错的话!它们是完全一样的!</dim>"
+				} else
+					diff_info = "<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>";
 			}
 			//push入数据，它是个数组，实际上
 			results.push({
@@ -236,12 +233,12 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 				description: title_get + near_str + diff_info //这是描述
 			});
 		}
-		if (!lastsearch && search_result.length < 5 && pages==1) //结果不足，只是在第一页
+		if (!lastsearch && search_result.length < 5 && pages == 1) //结果不足，只是在第一页
 		{
 			//递归
 			get_search_text(text, edit_type, results, callback, true);
 		} else {
-			put_info("这是深入探索[<url>" + text + "</url>]获得的发现..."+page_info); //发绿？
+			put_info("这是深入探索[<url>" + text + "</url>]获得的发现..." + page_info); //发绿？
 			callback(results); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
@@ -266,8 +263,8 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
 		if (result_arry.length == 0) {
 			//切换到别的方式去
-			if (!edit_type.isedit){
-				put_info("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>["+text +"]</url>的玩意:");
+			if (!edit_type.isedit) {
+				put_info("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>[" + text + "]</url>的玩意:");
 			}
 			freeze(); //冻结
 			get_search_text(text, edit_type, results, callback, false); //非最后一次
@@ -281,17 +278,17 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 				//一致提醒
 				if (edit_type.isedit) {
 					put_info("探索到了!" + str_new_win + "<url>重新</url	>见识<url>[" + title_get + "]</url>!"); //处理不一致的文字
-				} else if (edit_type.iscopy) {   //复制模式，最终效验
+				} else if (edit_type.iscopy) { //复制模式，最终效验
 					make_copy_text = "[[" + title_get + "]]";
 					copy_text(make_copy_text);
 					defreeze(); //临时解冻
 					put_info("已探索到<url>[.c]</url>是个完全匹配的见识,已经将处理后的<url>" + make_copy_text + "</url>送到剪贴板...");
 					freeze(); //继续冻结
-				}else {
+				} else {
 					put_info("噢!太好了!探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
 
-				normal_list.push(text,title_get);//送入规格化信息
+				normal_list.push(text, title_get); //送入规格化信息
 			}
 			var match_str = ominibox_get_highline(title_get, text);
 			//push入数据，只是坏情况发生的时候
@@ -336,7 +333,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				titles_arr[title_redirect.from] = {}; //几乎不会再被使用
 				titles_arr[title_redirect.from].to = title_redirect.to; //重定向指向，初步直针	
 				//转录重定向列表，一份随意而又庞大的表
-				redict_list.push(title_redirect.from,title_redirect.to);
+				redict_list.push(title_redirect.from, title_redirect.to);
 			}
 		}
 		//给它转过去，让它飞翔
@@ -382,12 +379,12 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 					} else {
 						put_info("噢!太好了!探索到存在,只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
 					}
-					has_same_title=true; //有完全匹配了
+					has_same_title = true; //有完全匹配了
 					//只是你可能输入错误的重定向，将来将首先从正常化获得，再检查重定向
 					//redict_list.push(title_redirect.from,title_redirect.to);
 				}
-			}else { //如果有必要清理重定向
-					redict_list.remove(title_get); //清除重定向，不再有了
+			} else { //如果有必要清理重定向
+				redict_list.remove(title_get); //清除重定向，不再有了
 			}
 			//处理分类
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
@@ -466,15 +463,14 @@ function resetDefaultSuggestion() {
  */
 
 function put_info(text) {
-	if (freeze_flag)
-	{
-		return false;//冻结了
+	if (freeze_flag) {
+		return false; //冻结了
 	}
 	//默认的只能传送文字，遗憾的
 	chrome.omnibox.setDefaultSuggestion({
 		description: text
 	});
-	return true;//释放了
+	return true; //释放了
 }
 
 // 开始输入，有了第一次反应
@@ -528,10 +524,9 @@ function get_json(req_url, callback, onerror) {
  * 实际上只要tab.id看起来就够了
  */
 
-function tab_go(url) { 
-	if (isdebug)
-	{
-		log ("设置为不进入标签，页面为：",url)
+function tab_go(url) {
+	if (isdebug) {
+		log("设置为不进入标签，页面为：", url)
 		return false; //不干活了
 	}
 	chrome.tabs.getSelected(function (tab) {
@@ -578,6 +573,7 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 /* 获得当前的tab，留待使用
  * 它可以获得，而且看起来并不是很疯狂
  */
+
 function tab_getnow() {
 	chrome.tabs.getSelected(function (tab) {
 		log("当前的标签是:", tab); //tab.url 就是url地址了
@@ -599,54 +595,57 @@ function issth(anything) {
  */
 
 function chk_redict(text) {
-    //正常化，再重定向
+	//正常化，再重定向
 	return redict_list.pull(normal_list.pull(text));
 }
 
 /* 互斥监督者，冻结提醒文字变动 */
-function freeze(){
+
+function freeze() {
 	//冻结信息提示
 	freeze_flag = true;
 }
 
 /* 互斥监督者，解除冻结提醒文字变动 */
-function defreeze(){
+
+function defreeze() {
 	freeze_flag = false;
 }
 
 /* 最无用的家伙
  * 显示一些帮助
  */
-function get_help(callback){
-		//可能不是及时更新，切当看看
-		put_info ('欢迎使用森亮号航海见识探索,下面是<url>航海见识探索</url>的一些认知执行操作:');
-		var results = [];//初始化提醒
-		//编辑模式
-		results.push({
-			content: "简单匹配.?", //更细致的？哦不。。
-			description: "<dim>简单匹配</dim>    <url>[(见识标题的一部分)" +"]</url>:从头开始模糊匹配,如果<url>探索不充分</url>,将再从内容里继续匹配"
-		});
-		//编辑模式
-		results.push({
-			content: "编辑模式.?", //更细致的？哦不。。
-			description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit  + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab   + "],[(见识标题)" + perfix_edit_newtab_oldway + "]</url>:附近窗口编辑 "
-		});
-		//搜索模式
-		results.push({
-			content: "搜索模式.?", //更细致的？哦不。。
-			description: "<dim>搜索模式</dim>    <url>[(见识标题)" + perfix_search  + "]、全角[" + perfix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + perfix_search_fulltext    + "]</url>:仅仅搜索见识正文"
-		});
-		//搜索模式
-		results.push({
-			content: "别的玩意.?", //更细致的？哦不。。
-			description: "<dim>别的玩意</dim>    <url>[(见识标题)" + perfix_copy  + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + perfix_help     + "]</url>:提供本帮助信息而已"
-		});
-		//去往主页
-		results.push({
-			content: "航海见识探索", //更细致的？哦不。。
-			description: "<dim>去往巢穴</dim>   <url>[航海见识探索]</url>:选择我, 去往我的孵育地.....\t  \t以及还有<url>[ ],[.last],[最近]</url>:获得最近的见识"
-		});
-		//别的玩意
-		callback(results);//返回
-		return true;
+
+function get_help(callback) {
+	//可能不是及时更新，切当看看
+	put_info('欢迎使用森亮号航海见识探索,下面是<url>航海见识探索</url>的一些认知执行操作:');
+	var results = []; //初始化提醒
+	//编辑模式
+	results.push({
+		content: "简单匹配.?", //更细致的？哦不。。
+		description: "<dim>简单匹配</dim>    <url>[(见识标题的一部分)" + "]</url>:从头开始模糊匹配,如果<url>探索不充分</url>,将再从内容里继续匹配"
+	});
+	//编辑模式
+	results.push({
+		content: "编辑模式.?", //更细致的？哦不。。
+		description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab + "],[(见识标题)" + perfix_edit_newtab_oldway + "]</url>:附近窗口编辑 "
+	});
+	//搜索模式
+	results.push({
+		content: "搜索模式.?", //更细致的？哦不。。
+		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + perfix_search + "]、全角[" + perfix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + perfix_search_fulltext + "]</url>:仅仅搜索见识正文"
+	});
+	//搜索模式
+	results.push({
+		content: "别的玩意.?", //更细致的？哦不。。
+		description: "<dim>别的玩意</dim>    <url>[(见识标题)" + perfix_copy + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + perfix_help + "]</url>:提供本帮助信息而已"
+	});
+	//去往主页
+	results.push({
+		content: "航海见识探索", //更细致的？哦不。。
+		description: "<dim>去往巢穴</dim>   <url>[航海见识探索]</url>:选择我, 去往我的孵育地.....\t  \t以及还有<url>[ ],[.last],[最近]</url>:获得最近的见识"
+	});
+	//别的玩意
+	callback(results); //返回
+	return true;
 }

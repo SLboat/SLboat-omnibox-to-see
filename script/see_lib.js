@@ -34,7 +34,7 @@ function str_getlast(text, how_long) {
 	return { //返回全空白
 		"last": "",
 		"str": ""
-	}; 
+	};
 }
 
 /* 获得最后的字符的重复次数，如果没有重复就返回0
@@ -45,13 +45,15 @@ function str_getlast(text, how_long) {
  */
 
 function str_getlastbytimes(text, lett) {
-	var results={ times:0,str: ""}; //默认字串
+	var results = {
+		times: 0,
+		str: ""
+	}; //默认字串
 
-	while (text.charAt(text.length-1)==lett)
-	{
+	while (text.charAt(text.length - 1) == lett) {
 		results.times++; //增加一次
-		text=text.substr(0,text.length-1); //除掉了一个
-		results.str=text; //赋值进入
+		text = text.substr(0, text.length - 1); //除掉了一个
+		results.str = text; //赋值进入
 	}
 	return results; //返回结果
 }
@@ -85,9 +87,9 @@ function ominibox_get_highline(title_get, text) {
 function slboat_get_match(snippet) {
 	var use_tag = "url"; //使用tag方式，可以用match、dim、url三个玩意
 	//转换左标签
-	snippet = snippet.replace(/<span class='searchmatch'>/g, "<"+use_tag+">");
+	snippet = snippet.replace(/<span class='searchmatch'>/g, "<" + use_tag + ">");
 	//转换右标签
-	snippet = snippet.replace(/<\/span>/g, "</"+use_tag+">");
+	snippet = snippet.replace(/<\/span>/g, "</" + use_tag + ">");
 	//todo:切割长度？
 	return snippet;
 }
@@ -116,6 +118,7 @@ function log(info, date) {
 	return true;
 }
 /* 复制文本到剪贴板里这样送出去咯 */
+
 function copy_text(text) {
 	//todo：检查些之前内容啥的
 	var inkstand = document.getElementById('inkstand'); //不需要使用jQuery
@@ -127,69 +130,69 @@ function copy_text(text) {
 
 /* 重定向的工厂，为了同时载入 放在这里寄放，这里就像个地点 */
 
-function Redirect(){ //工厂制造
-	this.date={}; //这是部件构造
+function Redirect() { //工厂制造
+	this.date = {}; //这是部件构造
 }
 /* 重定向部件，第一次尝试结构化 */
-Redirect.prototype={ //零件构建
+Redirect.prototype = { //零件构建
 	/* 重定向部件的结构 
 	 * date[标题]=重定向对象
 	 * 不允许[标题=重定向]区分大小写，[重定向等于空]
 	 * 不考虑是否一致等情况
 	 */
 	// date: new Object(),  //重定向的保存数组，会被初始化
-	
+
 	/* 内部使用，检查是否存在键值 
 	 * 存在返回true，不存在返回false
 	 * 就像是 !!object
-     */
-	check: function(from){
-		return (this.date[from]!==undefined); //返回是否未定义
+	 */
+	check: function (from) {
+		return (this.date[from] !== undefined); //返回是否未定义
 	},
 	/* 格式化/符号-看起来没有必要，因为它自己会归纳 */
-	esc: function(str){
+	esc: function (str) {
 		return str.replace("\\", "\\\\");
 	},
 	/* 初始化一切玩意 */
-	init: function(){
+	init: function () {
 		this.date = {}; //这里看起来如果操作原型的话就不同属性了__prototype_啥子的
 	},
 	/* 推入重定向
 	 * 如果原始存在，那就更新重定向 
 	 */
-	push: function(from,to){
-		if ( to=="" || from =="" ){ //无效值或者一样值
+	push: function (from, to) {
+		if (to == "" || from == "") { //无效值或者一样值
 			//清空记录的重定向？
 			return false; //一致没必要送入
-		}else if (from==to) //已经一致了，抛弃所有的，要么就重写，抛弃比较好
+		} else if (from == to) //已经一致了，抛弃所有的，要么就重写，抛弃比较好
 		{
 			this.remove(from);
 			return true; //已经被抛弃
 		}
-		this.date[from]=to; //直接的送入，和上次一样也不管了
+		this.date[from] = to; //直接的送入，和上次一样也不管了
 		return true;
 	},
-	 /* 移除重定向 */
-	remove: function(from){
-		if (!this.check(from))//不存在，看起来这个判断是可以行的，因为有依赖数组
+	/* 移除重定向 */
+	remove: function (from) {
+		if (!this.check(from)) //不存在，看起来这个判断是可以行的，因为有依赖数组
 		{
-			return false;//本来不存在，但是得到了想要的
+			return false; //本来不存在，但是得到了想要的
 		}
-		return delete this.date[from];//返回删除
+		return delete this.date[from]; //返回删除
 	},
 
-	 /* 推出重定向 
-	  * 如果获得不到，那么返回原来一样的
-	  */
-	pull: function(from){
+	/* 推出重定向 
+	 * 如果获得不到，那么返回原来一样的
+	 */
+	pull: function (from) {
 		if (!this.check(from)) //不存在，返回原来的
 		{
 			return from;
 		}
-		return this.date[from];// 无效不会存入，所以不太担心 
+		return this.date[from]; // 无效不会存入，所以不太担心 
 	}
- 
- }//部件构造结束
+
+} //部件构造结束
 
 /* 生产两个工厂 */
 var redict_list = new Redirect(); //工厂：重定向缓存列表
