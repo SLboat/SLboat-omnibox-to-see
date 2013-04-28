@@ -31,12 +31,30 @@ function str_getlast(text, how_long) {
 			"str": text.substr(0, text.length - how_long)
 		}; //返回一个原型包含位置和长度
 	}
-	return {
+	return { //返回全空白
 		"last": "",
 		"str": ""
-	}; //送回一个空，不介意吧，不算太好的主意
+	}; 
 }
 
+/* 获得最后的字符的重复次数，如果没有重复就返回0
+ * 传入原始字符串，匹配单字符
+ * 返回：
+ * result.times: 重复次数
+ * result.str: 切除尾巴后的字符
+ */
+
+function str_getlastbytimes(text, lett) {
+	var results={ times:0,str: ""}; //默认字串
+
+	while (text.getcharat(text.length)==lett)
+	{
+		results.times++; //增加一次
+		text=text.substr(0,text.length-1); //除掉了一个
+		results.str=text; //赋值进入
+	}
+	return results; //返回结果
+}
 /* 大写首字母的，别的的不变
  * 返回带大写的首字母
  */
@@ -156,7 +174,7 @@ Redirect.prototype={ //零件构建
 		{
 			return false;//本来不存在，但是得到了想要的
 		}
-		return delete this.date(from);//返回删除
+		return delete this.date[from];//返回删除
 	},
 
 	 /* 推出重定向 

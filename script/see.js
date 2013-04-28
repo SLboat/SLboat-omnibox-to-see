@@ -14,7 +14,7 @@ var perfix_help = ".?"; //提供帮助信息
 var perfix_edit = "+"; //前缀编辑模式
 var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var perfix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
-var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索
+var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
 var perfix_search_ime= "。"; //输入法生成的全角也认
 var perfix_search_fulltext = "-"; //仅搜索全部文本
 
@@ -55,6 +55,7 @@ function edit_chk(text) { //检查编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
 	}else	if (str_chklast(text, perfix_search)) { //搜索内容
+		//切割获得次数
 		result.isfind = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_search.length).str; //切除
 	}else	if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
@@ -345,9 +346,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 					//redict_list.push(title_redirect.from,title_redirect.to);
 				}
 			}else { //如果有必要清理重定向
-					log (text+"的重定向已经被清除-由于原始重定向页面已经丢失"); //调试信息
 					redict_list.remove(title_get); //清除重定向，不再有了
-					has_same_title=true; //有完全匹配了
 			}
 			//处理分类
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
