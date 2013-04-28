@@ -62,7 +62,9 @@ function edit_chk(text) { //检查编辑模式
 		result.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
 	} else if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
 		result.isfind = true; //单独的标记
-		result.newtext = str_getlast(text, perfix_search_ime.length).str; //切除
+		//切割获得次数
+		result.Srpages = str_getlastbytimes(text, perfix_search_ime).times; //获得需要的页数，最小是1
+		result.newtext = str_getlastbytimes(text, perfix_search_ime).str; //切除次数外的
 	} else if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
 		result.isfind = true; //寻找模式
 		result.onlytxt = true; //紧紧全文
@@ -180,7 +182,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
 	var page_info = "当前探索到第" + pages + "页";
-	if (pages = 1) {
+	if (pages == 1) {
 		prefix = "入口处...";
 		page_info = "当前探索到入口处"
 	} else {
