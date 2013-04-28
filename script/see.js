@@ -552,7 +552,7 @@ function tab_new(url) {
  * 将：去往那个见识的地方
  */
 chrome.omnibox.onInputEntered.addListener(function (text) {
-	var tips_title = "森亮Chrome扩展 森亮号航海见识搜索/探索提醒";
+	var tips_title = "航海见识探索/探索提醒";
 	var edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
