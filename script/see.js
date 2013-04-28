@@ -1,13 +1,11 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com";
-var redict_text = {
-	from: "",
-	to: ""
-}; //默认的重定向信息
+var redict_list = new Redirect(); //工厂：重定向缓存列表
+var normal_list = new Redirect(); //工厂：一个正常化表
 var freeze_flag = false;//冻结更新
 
 /* 调试配置 */
-isdebug = false;
+isdebug = true;
 
 /* 常规性配置
  * 可以量化为object？
@@ -16,7 +14,8 @@ isdebug = false;
 var perfix_copy = ".c"; //从标题复制文本
 var perfix_help = ".?"; //提供帮助信息
 var perfix_edit = "+"; //前缀编辑模式
-var perfix_edit_newtab = "*"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var perfix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索
 var perfix_search_ime= "。"; //输入法生成的全角也认
 var perfix_search_fulltext = "-"; //仅搜索全部文本
@@ -46,13 +45,17 @@ function edit_chk(text) { //检查编辑模式
 	}else if (str_chklast(text, perfix_copy)) { //当前标签编辑
 		result.iscopy = true; //设置标记
 		result.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
-	}else	if (str_chklast(text, perfix_edit)) { //当前标签编辑
-		result.isedit = true; //设置标记
-		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
-	}else	if (str_chklast(text, perfix_edit_newtab)) { //新标签编辑
+	}else	if (str_chklast(text, perfix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
 		result.isedit = true; //编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
+	}else	if (str_chklast(text, perfix_edit)) { //当前标签编辑
+		result.isedit = true; //设置标记
+		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
+	}else	if (str_chklast(text, perfix_edit_newtab_oldway)) { //新标签编辑，老方式
+		result.isedit = true; //编辑模式
+		result.isnew = true; //单独的标记
+		result.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
 	}else	if (str_chklast(text, perfix_search)) { //搜索内容
 		result.isfind = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_search.length).str; //切除
@@ -117,10 +120,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
 
-	redict_text = {
-		from: "",
-		to: ""
-	}; //初始化重定向信息
+	//重定向无需初始化
 	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无
 		if (edit_type.isfind) //搜索模式
 		{
@@ -234,10 +234,9 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 					freeze(); //继续冻结
 				}else {
 					put_info("噢!太好了!探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
-				}
-				//写入重定向
-				redict_text.from = text;
-				redict_text.to = title_get;
+				};
+
+				normal_list.push(text,title_get);//送入规格化信息
 			}
 			var match_str = ominibox_get_highline(title_get, text);
 			//push入数据，只是坏情况发生的时候
@@ -259,6 +258,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
 	//todo: 增加提醒信息？堆栈保存上次的，然后再恢复？
 	//等待更深一步探索
+	var has_same_title = false; //有完全匹配标题的项目
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
 	var onfaild = function (e) //如果发生了错误
@@ -320,15 +320,20 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
 				if (str_is_about_same(title_get, text)) //如果默认就有重定向，忽视大小写
 				{
-					redict_text.from = text;
-					redict_text.to = should_get;
+					redict_list.push(text,should_get); //push真正的重定向，如果没有了会被前面的删除
 					if (edit_type.isedit) {
 						put_info("探索到了!但它去往<url>被指引</url>," + str_new_win + "<url>重新</url	>见识<url>[" + should_get + "]</url>!"); //处理不一致的文字
 					} else {
 						put_info("噢!太好了!探索到存在,只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
 					}
+					has_same_title=true; //有完全匹配了
 				}
+			}else if (str_is_about_same(title_get, text)) { //如果有必要清理重定向
+					log (text+"的重定向已经被清除-由于原始重定向页面已经丢失")
+					redict_list.remove(text); //清除重定向，不再有了
+					has_same_title=true; //有完全匹配了
 			}
+			//处理分类
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
 			{
 				show_info += "见识位于分类<url>" + titles_arr[should_get].kat + "</url>";
@@ -347,10 +352,11 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			});
 		}
 		//处理是否需要再次提交
-		if (result_arry.length < 2 && redict_text.from != text) //太少结果了，没有完全匹配
+		if (result_arry.length < 2 && !has_same_title) //太少结果了，不到三个吧，没有完全匹配
 		{
 			//将未完成的结果传出去
 			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
+			freeze(); //冻结！
 		} else {
 			callback(results); //提交结果，完事
 			return false;
@@ -463,10 +469,16 @@ function get_json(req_url, callback, onerror) {
 }
 
 /* 前往海域-当前海域
+ * 实际上只要tab.id看起来就够了
  */
 
-function tab_go(url) {
-	chrome.tabs.getSelected(null, function (tab) { //这就是获得了当前的tab哦
+function tab_go(url) { 
+	if (isdebug)
+	{
+		log ("设置为不进入标签，页面为：",url)
+		return false; //不干活了
+	}
+	chrome.tabs.getSelected(function (tab) {
 		chrome.tabs.update(tab.id, {
 			url: url
 		});
@@ -489,12 +501,12 @@ function tab_new(url) {
  * 将：去往那个见识的地方
  */
 chrome.omnibox.onInputEntered.addListener(function (text) {
-	tips_title = "森亮Chrome扩展 森亮见识墨水/探索提醒";
-	edit_type = edit_chk(text); //检查类型
+	var tips_title = "森亮Chrome扩展 森亮号航海见识搜索/探索提醒";
+	var edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
-	var edit_link = "http://see.sl088.com/w/index.php?action=edit&editintro=" +
+	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title="
-
+	//处理新窗口
 	if (edit_type.isnew) { //一起+那就放回去
 		tab_new(edit_link + chk_redict(text)); //处理重定向
 
@@ -503,31 +515,18 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 
 	} else {
 		//正常情况下，当一样的时候让它自己跳转
-		tab_go("http://see.sl088.com/w/index.php?search=" + text);
+		tab_go(site_url + "/w/index.php?search=" + text);
 	}
 });
 
 /* 获得当前的tab，留待使用
  * 它可以获得，而且看起来并不是很疯狂
  */
-tab_getnow = function () {
+function tab_getnow() {
 	chrome.tabs.getSelected(function (tab) {
-		console.debug("当前的标签是:", tab); //tab.url 就是url地址了
+		log("当前的标签是:", tab); //tab.url 就是url地址了
+		return tab; //返回tab
 	});
-}
-
-/* 记录日志信息，简单的 
- * 有时候简单或许就是更好的
- */
-
-function log(info, date) {
-	if (!isdebug) return false; //返回
-	if (typeof (date) == "undefined") {
-		console.log("调试信息：", info);
-	} else {
-		console.log("调试信息：", info, date);
-	}
-	return true;
 }
 
 /* 判断是否是一些东西
@@ -544,11 +543,12 @@ function issth(anything) {
  */
 
 function chk_redict(text) {
-	if (redict_text.from == text && redict_text.to != "") //有重定向信息
+    //先检查重定向
+	if (redict_list.check(text)) //存在重定向
 	{
-		text = redict_text.to; //去往重定向页
+		return redict_list.pull(text);
 	}
-	return text; //放回去
+	return normal_list.pull(text); //交给正常化去处理
 }
 
 /* 互斥监督者，冻结提醒文字变动 */
@@ -577,7 +577,7 @@ function get_help(callback){
 		//编辑模式
 		results.push({
 			content: "编辑模式.?", //更细致的？哦不。。
-			description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit  + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab   + "]</url>:附近窗口编辑 "
+			description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit  + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab   + "],[(见识标题)" + perfix_edit_newtab_oldway + "]</url>:附近窗口编辑 "
 		});
 		//搜索模式
 		results.push({

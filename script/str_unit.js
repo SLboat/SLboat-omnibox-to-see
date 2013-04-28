@@ -82,6 +82,19 @@ function str_is_about_same(a, b) {
 
 }
 
+/* 记录日志信息，简单的 
+ * 有时候简单或许就是更好的
+ */
+
+function log(info, date) {
+	if (!isdebug) return false; //返回
+	if (typeof (date) == "undefined") {
+		console.log("调试信息：", info);
+	} else {
+		console.log("调试信息：", info, date);
+	}
+	return true;
+}
 /* 复制文本到剪贴板里这样送出去咯 */
 function copy_text(text) {
 	//todo：检查些之前内容啥的
@@ -91,3 +104,59 @@ function copy_text(text) {
 	var rv = document.execCommand("copy"); //执行复制到这里
 	return rv; //返回这玩意的执行
 }
+
+function Redirect(){ //工厂制造
+	this.date={}; //这是部件构造
+}
+/* 重定向部件，第一次尝试结构化 */
+Redirect.prototype={ //零件构建
+	/* 重定向部件的结构 
+	 * date[标题]=重定向对象
+	 * 不允许[标题=重定向]区分大小写，[重定向等于空]
+	 * 不考虑是否一致等情况
+	 */
+	// date: new Object(),  //重定向的保存数组，会被初始化
+	
+	/* 内部使用，检查是否存在键值 
+	 * 存在返回true，不存在返回false
+	 * 就像是 !!object
+     */
+	check: function(from){
+		return (this.date[from]!==undefined); //返回是否未定义
+	},
+	/* 初始化一切玩意 */
+	init: function(){
+		this.date = {}; //这里看起来如果操作原型的话就不同属性了__prototype_啥子的
+	},
+	/* 推入重定向
+	 * 如果原始存在，那就更新重定向 
+	 */
+	push: function(from,to){
+		if (from==to || to=="" || from =="" ){ //无效值或者一样值
+			//清空记录的重定向？
+			return false; //一致没必要送入
+		}
+		this.date[from]=to; //直接的送入，和上次一样也不管了
+		return true;
+	},
+	 /* 移除重定向 */
+	remove: function(from){
+		if (!this.check(from))//不存在，看起来这个判断是可以行的，因为有依赖数组
+		{
+			return false;//本来不存在，但是得到了想要的
+		}
+		return delete this.date(from);//返回删除
+	},
+
+	 /* 推出重定向 
+	  * 如果获得不到，那么返回原来一样的
+	  */
+	pull: function(from){
+		if (!this.check(from)) //不存在，返回原来的
+		{
+			return from;
+		}
+		return this.date[from];// 无效不会存入，所以不太担心 
+	}
+ 
+ }//部件构造结束
