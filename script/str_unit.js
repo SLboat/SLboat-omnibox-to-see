@@ -105,6 +105,8 @@ function copy_text(text) {
 	return rv; //返回这玩意的执行
 }
 
+/* 重定向的工厂，为了同时载入 放在这里寄放，这里就像个地点 */
+
 function Redirect(){ //工厂制造
 	this.date={}; //这是部件构造
 }
@@ -124,6 +126,10 @@ Redirect.prototype={ //零件构建
 	check: function(from){
 		return (this.date[from]!==undefined); //返回是否未定义
 	},
+	/* 格式化/符号-看起来没有必要，因为它自己会归纳 */
+	esc: function(str){
+		return str.replace("\\", "\\\\");
+	},
 	/* 初始化一切玩意 */
 	init: function(){
 		this.date = {}; //这里看起来如果操作原型的话就不同属性了__prototype_啥子的
@@ -132,9 +138,13 @@ Redirect.prototype={ //零件构建
 	 * 如果原始存在，那就更新重定向 
 	 */
 	push: function(from,to){
-		if (from==to || to=="" || from =="" ){ //无效值或者一样值
+		if ( to=="" || from =="" ){ //无效值或者一样值
 			//清空记录的重定向？
 			return false; //一致没必要送入
+		}else if (from==to) //已经一致了，抛弃所有的，要么就重写，抛弃比较好
+		{
+			this.remove(from);
+			return true; //已经被抛弃
 		}
 		this.date[from]=to; //直接的送入，和上次一样也不管了
 		return true;
@@ -160,3 +170,7 @@ Redirect.prototype={ //零件构建
 	}
  
  }//部件构造结束
+
+/* 生产两个工厂 */
+var redict_list = new Redirect(); //工厂：重定向缓存列表
+var normal_list = new Redirect(); //工厂：一个正常化表

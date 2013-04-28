@@ -1,11 +1,9 @@
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com";
-var redict_list = new Redirect(); //工厂：重定向缓存列表
-var normal_list = new Redirect(); //工厂：一个正常化表
 var freeze_flag = false;//冻结更新
 
 /* 调试配置 */
-isdebug = true;
+isdebug = false;
 
 /* 常规性配置
  * 可以量化为object？
@@ -90,8 +88,6 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		currentRequest = null;
 	}
 
-	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>%s</match>]");
-
 	//处理编辑模式字符，看起来没啥坏处
 	edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
@@ -119,6 +115,8 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	if (edit_type.isedit) {
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
+
+	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text +"</match>]");
 
 	//重定向无需初始化
 	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无
@@ -156,6 +154,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
  */
 
 function get_search_text(text, search_text, results, callback, lastsearch) {
+
 	var near_str = ""; //接近提示
 	if (search_text) {
 		strwhat = "text";
@@ -170,7 +169,7 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		log("搜索得到了", data);
 		var search_result = data.query.search; //返回结果
-		if (lastsearch && search_result.length == 0) //到最后一步了
+		if (lastsearch && search_result.length == 0 && results.length==0) //到最后一步了，全局是0
 		{
 			put_info("探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
 			return false;
@@ -180,7 +179,17 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 		{
 			title_get = search_result[index].title; //标题好吗，模糊标题一样
 			diff_info = slboat_get_match(search_result[index].snippet); //匹配内容
-			//push入数据
+			if (diff_info.length<1) //没有过多信息
+			{				
+				//通常的它们会混在一起
+				if (str_is_about_same(text, title_get)) //一致化了 
+				{
+					normal_list.push(text, title_get);//送入规格化信息
+					diff_info="<dim>我没看错的话!它们是完全一样的!</dim>"
+				}else
+					diff_info="<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>" ;
+			}
+			//push入数据，它是个数组，实际上
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 				description: title_get + near_str + diff_info //这是描述
@@ -192,7 +201,7 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 			get_search_text(text, !search_text, results, callback, true)
 		} else {
 			callback(results); //回调回去
-			return true;
+			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
 
 	}); //回调结束
@@ -280,6 +289,8 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				//初始化等待
 				titles_arr[title_redirect.from] = {}; //几乎不会再被使用
 				titles_arr[title_redirect.from].to = title_redirect.to; //重定向指向，初步直针	
+				//转录重定向列表，一份随意而又庞大的表
+				redict_list.push(title_redirect.from,title_redirect.to);
 			}
 		}
 		//给它转过去，让它飞翔
@@ -320,17 +331,18 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
 				if (str_is_about_same(title_get, text)) //如果默认就有重定向，忽视大小写
 				{
-					redict_list.push(text,should_get); //push真正的重定向，如果没有了会被前面的删除
 					if (edit_type.isedit) {
 						put_info("探索到了!但它去往<url>被指引</url>," + str_new_win + "<url>重新</url	>见识<url>[" + should_get + "]</url>!"); //处理不一致的文字
 					} else {
 						put_info("噢!太好了!探索到存在,只是<url>被指引</url>去了<url>[" + should_get + "]</url>的见识!前往所在地吗?");
 					}
 					has_same_title=true; //有完全匹配了
+					//只是你可能输入错误的重定向，将来将首先从正常化获得，再检查重定向
+					//redict_list.push(title_redirect.from,title_redirect.to);
 				}
-			}else if (str_is_about_same(title_get, text)) { //如果有必要清理重定向
-					log (text+"的重定向已经被清除-由于原始重定向页面已经丢失")
-					redict_list.remove(text); //清除重定向，不再有了
+			}else { //如果有必要清理重定向
+					log (text+"的重定向已经被清除-由于原始重定向页面已经丢失"); //调试信息
+					redict_list.remove(title_get); //清除重定向，不再有了
 					has_same_title=true; //有完全匹配了
 			}
 			//处理分类
@@ -339,7 +351,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 				show_info += "见识位于分类<url>" + titles_arr[should_get].kat + "</url>";
 			}
 			if (show_info == def_show_info) { //没有探索到
-				show_info += "存在于在航海见识\t更深入探索失败" //这是描述
+				show_info += "存在于在航海见识\t但是看起来没有<url>被分类</url>" //这是描述
 			}
 			show_info += "</dim>"; //匹配结束
 			if (title_get == text) { //完全一样会不显示
@@ -543,12 +555,8 @@ function issth(anything) {
  */
 
 function chk_redict(text) {
-    //先检查重定向
-	if (redict_list.check(text)) //存在重定向
-	{
-		return redict_list.pull(text);
-	}
-	return normal_list.pull(text); //交给正常化去处理
+    //正常化，再重定向
+	return redict_list.pull(normal_list.pull(text));
 }
 
 /* 互斥监督者，冻结提醒文字变动 */
