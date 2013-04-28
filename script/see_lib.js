@@ -47,7 +47,7 @@ function str_getlast(text, how_long) {
 function str_getlastbytimes(text, lett) {
 	var results={ times:0,str: ""}; //默认字串
 
-	while (text.getcharat(text.length)==lett)
+	while (text.charAt(text.length-1)==lett)
 	{
 		results.times++; //增加一次
 		text=text.substr(0,text.length-1); //除掉了一个
@@ -55,6 +55,7 @@ function str_getlastbytimes(text, lett) {
 	}
 	return results; //返回结果
 }
+
 /* 大写首字母的，别的的不变
  * 返回带大写的首字母
  */

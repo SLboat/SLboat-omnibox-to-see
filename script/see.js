@@ -1,5 +1,5 @@
 var currentRequest = null; //当前请求
-var site_url = "http://see.sl088.com";
+var site_url = "http://see.sl088.com"; //请求站点
 var freeze_flag = false;//冻结更新
 
 /* 调试配置 */
@@ -32,9 +32,10 @@ function edit_chk(text) { //检查编辑模式
 		isnew: false,
 		newtext: text,
 		isfind: false, //搜索模式
-		onlytxt: false, //只搜索标题
+		onlytxt: false, //只搜索内容
 		iscopy: false, //需要复制
-		ishelp: false
+		ishelp: false,
+		Srpages: 1 //页数1，第一页开始
 	}; //返回构造
 
 	if (str_chklast(text, perfix_help)) { //当前标签编辑
@@ -55,9 +56,10 @@ function edit_chk(text) { //检查编辑模式
 		result.isnew = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
 	}else	if (str_chklast(text, perfix_search)) { //搜索内容
-		//切割获得次数
 		result.isfind = true; //单独的标记
-		result.newtext = str_getlast(text, perfix_search.length).str; //切除
+		//切割获得次数
+		result.Srpages=str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
+		result.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
 	}else	if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
 		result.isfind = true; //单独的标记
 		result.newtext = str_getlast(text, perfix_search_ime.length).str; //切除
@@ -124,7 +126,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 		if (edit_type.isfind) //搜索模式
 		{
 			var results = []; //未来的种子
-			get_search_text(text, edit_type.onlytxt, results, function (results) {
+			get_search_text(text, edit_type, results, function (results) {
 				suggest(results); //搜索建议释放
 			}, false); //非最后一次
 		} else { //非搜索模式
@@ -152,11 +154,24 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
  * 回调搜索建议
  * 它将会很酷
  * todo:如果错误，尝试丢回上一次信息
+ * todo:清理掉search_text，这个落后的玩意
  */
 
-function get_search_text(text, search_text, results, callback, lastsearch) {
-
+function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
+	var pages=edit_type.Srpages;//页数，1开始
+	var has_next_page = false;//没有下一页
+	//超过一页，不搜索标题先了
+	if (pages>1)
+	{
+		search_text=true;
+	}else{
+		//进行必要的搜索反转
+		if(!lastsearch){
+			//非最后一次搜索，原始一样
+			search_text=edit_type.onlytxt;
+		}else{	search_text=!edit_type.onlytxt;} //反转搜索
+	}
 	if (search_text) {
 		strwhat = "text";
 		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
@@ -164,15 +179,40 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 		strwhat = "title"; //标题好的
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
-	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=6&gcllimit=10&srsearch=" + encodeURIComponent(text);
+	var page_info = "当前探索到第" + pages + "页";
+	if (pages=1)
+	{
+		prefix="入口处...";
+		page_info="当前探索到入口处"
+	}else{
+		prefix="深入的<url>第"+ pages+"页</url>";
+	}
+
+	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
+
+	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&gcllimit=10&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
+	if (pages>1)
+	{
+		req_url += "&sroffset=" + pages*5; //搜索页数，每页五项
+	}
 	//开始呼叫
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		log("搜索得到了", data);
+		if (data["query-continue"]!==undefined)//拥有下一页的玩意
+		{
+			has_next_page=true; //还有更多页
+			page_info=page_info+",探索到还有<dim>[第"+(pages +1) +"页]</dim>";
+		}
 		var search_result = data.query.search; //返回结果
 		if (lastsearch && search_result.length == 0 && results.length==0) //到最后一步了，全局是0
 		{
-			put_info("探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
+			var perfix_info = "";
+			if (pages>1)
+			{
+				perfix_info="在" + pages + "页"
+			}
+			put_info(perfix_info + "探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
 			return false;
 		}
 		//开始释放结果
@@ -196,11 +236,12 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 				description: title_get + near_str + diff_info //这是描述
 			});
 		}
-		if (!lastsearch && search_result.length < 5) //结果不足
+		if (!lastsearch && search_result.length < 5 && pages==1) //结果不足，只是在第一页
 		{
 			//递归
-			get_search_text(text, !search_text, results, callback, true);
+			get_search_text(text, edit_type, results, callback, true);
 		} else {
+			put_info("这是深入探索[<url>" + text + "</url>]获得的发现..."+page_info); //发绿？
 			callback(results); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
@@ -217,7 +258,7 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
-	req_url = site_url + "/w/api.php?action=opensearch&limit=6&suggest&search=" + encodeURIComponent(text); //构造字串
+	req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(text); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		var results = [];
@@ -229,7 +270,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 				put_info("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>["+text +"]</url>的玩意:");
 			}
 			freeze(); //冻结
-			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
+			get_search_text(text, edit_type, results, callback, false); //非最后一次
 			return true; //退出，将失去一切
 		}
 		//这是每一个结果的处置
@@ -274,7 +315,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 	//等待更深一步探索
 	var has_same_title = false; //有完全匹配标题的项目
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
-	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=6&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
+	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=5&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
 	var onfaild = function (e) //如果发生了错误
 	{
 		put_info("更深入探索见识的时候发生了些意外: [" + e.message + "], 这是初步探索");
@@ -369,9 +410,9 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 		//处理是否需要再次提交
 		if (result_arry.length < 2 && !has_same_title) //太少结果了，不到三个吧，没有完全匹配
 		{
+			freeze(); //冻结标题!
 			//将未完成的结果传出去
-			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
-			freeze(); //冻结！
+			get_search_text(text, edit_type, results, callback, false); //非最后一次
 		} else {
 			callback(results); //提交结果，完事
 			return false;

@@ -14,8 +14,8 @@
    },
    "permissions": [
 	"tabs",
-	"http://see.sl088.com/*" 
+	"http://see.sl088.com/*"
 	],
-   "version": "3.15.2",
+   "version": "3.15.3",
    "manifest_version": 2
 }
