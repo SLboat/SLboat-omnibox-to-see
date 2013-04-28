@@ -64,10 +64,11 @@ function ominibox_get_highline(title_get, text) {
  */
 
 function slboat_get_match(snippet) {
+	var use_tag = "url"; //使用tag方式，可以用match、dim、url三个玩意
 	//转换左标签
-	snippet = snippet.replace(/<span class='searchmatch'>/g, "<match>");
+	snippet = snippet.replace(/<span class='searchmatch'>/g, "<"+use_tag+">");
 	//转换右标签
-	snippet = snippet.replace(/<\/span>/g, "</match>");
+	snippet = snippet.replace(/<\/span>/g, "</"+use_tag+">");
 	//todo:切割长度？
 	return snippet;
 }

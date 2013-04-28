@@ -198,7 +198,7 @@ function get_search_text(text, search_text, results, callback, lastsearch) {
 		if (!lastsearch && search_result.length < 5) //结果不足
 		{
 			//递归
-			get_search_text(text, !search_text, results, callback, true)
+			get_search_text(text, !search_text, results, callback, true);
 		} else {
 			callback(results); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
@@ -224,6 +224,10 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
 		if (result_arry.length == 0) {
 			//切换到别的方式去
+			if (!edit_type.isedit){
+				put_info("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>["+text +"]</url>的玩意:");
+			}
+			freeze(); //冻结
 			get_search_text(text, edit_type.onlytxt, results, callback, false); //非最后一次
 			return true; //退出，将失去一切
 		}
