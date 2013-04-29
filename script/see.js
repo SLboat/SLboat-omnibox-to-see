@@ -27,7 +27,7 @@ var need_more = true; //需要更多信息，用来过滤更多信息
  */
 
 function edit_chk(text) { //检查编辑模式
-	var result = {
+	var edit_type = {
 		isedit: false,
 		isnew: false,
 		newtext: text,
@@ -39,39 +39,39 @@ function edit_chk(text) { //检查编辑模式
 	}; //返回构造
 
 	if (str_chklast(text, perfix_help)) { //当前标签编辑
-		result.ishelp = true;
-		result.newtext = str_getlast(text, perfix_help.length).str; //返回剩余的一部分
+		edit_type.ishelp = true;
+		edit_type.newtext = str_getlast(text, perfix_help.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, perfix_copy)) { //当前标签编辑
-		result.iscopy = true; //设置标记
-		result.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
+		edit_type.iscopy = true; //设置标记
+		edit_type.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, perfix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
-		result.isedit = true; //编辑模式
-		result.isnew = true; //单独的标记
-		result.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
+		edit_type.isedit = true; //编辑模式
+		edit_type.isnew = true; //单独的标记
+		edit_type.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
 	} else if (str_chklast(text, perfix_edit)) { //当前标签编辑
-		result.isedit = true; //设置标记
-		result.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
+		edit_type.isedit = true; //设置标记
+		edit_type.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, perfix_edit_newtab_oldway)) { //新标签编辑，老方式
-		result.isedit = true; //编辑模式
-		result.isnew = true; //单独的标记
-		result.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
+		edit_type.isedit = true; //编辑模式
+		edit_type.isnew = true; //单独的标记
+		edit_type.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
 	} else if (str_chklast(text, perfix_search)) { //搜索内容
-		result.isfind = true; //单独的标记
+		edit_type.isfind = true; //单独的标记
 		//切割获得次数
-		result.Srpages = str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
-		result.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
+		edit_type.Srpages = str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
 	} else if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
-		result.isfind = true; //单独的标记
+		edit_type.isfind = true; //单独的标记
 		//切割获得次数
-		result.Srpages = str_getlastbytimes(text, perfix_search_ime).times; //获得需要的页数，最小是1
-		result.newtext = str_getlastbytimes(text, perfix_search_ime).str; //切除次数外的
+		edit_type.Srpages = str_getlastbytimes(text, perfix_search_ime).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, perfix_search_ime).str; //切除次数外的
 	} else if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
-		result.isfind = true; //寻找模式
-		result.onlytxt = true; //紧紧全文
-		result.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
+		edit_type.isfind = true; //寻找模式
+		edit_type.onlytxt = true; //紧紧全文
+		edit_type.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
 	}
 
-	return result; //返回构建
+	return edit_type; //返回构建
 }
 
 /* 输入变动 
@@ -182,10 +182,13 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
 	var page_info = "当前探索到第" + pages + "页";
-	if (pages == 1) {
-		prefix = "入口处...";
-		page_info = "当前探索到入口处"
-	} else {
+	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
+		prefix = "入口处<url>(也探索标题)</url>...";
+		page_info = "当前探索到入口处<url>(也探索标题)</url>"
+	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
+		prefix = "第2页<url>(不探索标题)</url>...";
+		page_info = "当前探索到第2页<url>(不探索标题)</url>"
+	}else {
 		prefix = "深入的<url>第" + pages + "页</url>";
 	}
 
@@ -193,7 +196,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&gcllimit=10&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
-	if (pages > 1) {
+	if (pages > 2) { //第二页开始切换
 		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
 	}
 	//开始呼叫
@@ -239,8 +242,15 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		{
 			//递归
 			get_search_text(text, edit_type, results, callback, true);
-		} else {
+		} else {//会有结果吗
 			put_info("这是深入探索[<url>" + text + "</url>]获得的发现..." + page_info); //发绿？
+			if (results.length==0) //没有任何结果
+			{
+				results.push({
+				content: "nothing i got:)", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
+				description: sprintf("探索失败/t   关于<url>%s</url>我即便深入探索也啥都没发现,试试模糊*替换字符?", text)   //这是描述
+				});
+			}
 			callback(results); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
@@ -373,7 +383,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			if (issth(titles_arr[title_get]) && titles_arr[title_get].to != "") //检查重定向
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
-				show_info += "被指引!它将带到<url>[" + should_get + "]</url>!\t";
+				show_info += sprintf("被指引!它将带到<url>[%s]</url>!\t", should_get);
 				if (str_is_about_same(title_get, text)) //如果默认就有重定向，忽视大小写
 				{
 					if (edit_type.isedit) {

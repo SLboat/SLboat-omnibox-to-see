@@ -128,6 +128,35 @@ function copy_text(text) {
 	return rv; //返回这玩意的执行
 }
 
+/* 这是改变自Lupin所制造的一种打印字符
+ * 这样使用它，str为原始串(%s代表标记),subs为一个匹配数组
+ * 如果是单项，不需要数组，这里会转换
+ * 如果多项，必须数组，否则只转换第一项
+ * 实现部分，前者是字符串，使用%s作为匹配，后者是匹配组们 
+ * 一个使用就像是：sprintf("hello%s,why %s is here",["you","me"])
+ * todo，增加五个附加值，避免每次要数组
+ */
+function sprintf(str, subs) {
+	if (typeof subs != typeof []) { subs = [subs]; } //非常有趣的转录
+	if (!str || !subs) { return str; }
+	var ret=[];
+	var s=str.split(/(%s|\$[0-9]+)/); //这是非常有趣的用法，js的字符串灵活性极大，IE下看起来不兼容
+	var i=0;
+	do {
+		ret.push(s.shift()); //看起来是传入字符
+		if ( !s.length ) { break; }
+		var cmd=s.shift();
+		if (cmd == '%s') {
+			if ( i < subs.length ) { ret.push(subs[i]); } else { ret.push(cmd); }
+			++i;
+		} else {
+			var j=parseInt( cmd.replace('$', ''), 10 ) - 1;
+			if ( j > -1 && j < subs.length ) { ret.push(subs[j]); } else { ret.push(cmd); }
+		}
+	} while (s.length > 0);
+	return ret.join('');
+}
+
 /* 重定向的工厂，为了同时载入 放在这里寄放，这里就像个地点 */
 
 function Redirect() { //工厂制造
