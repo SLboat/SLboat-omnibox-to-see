@@ -160,6 +160,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 
 function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
+	var page_info = "";//页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
 	//超过一页，不搜索标题先了
@@ -181,15 +182,16 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		strwhat = "title"; //标题好的
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
-	var page_info = "当前探索到第" + pages + "页";
+
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
-		prefix = "入口处<url>(也探索标题)</url>...";
-		page_info = "当前探索到入口处<url>(也探索标题)</url>"
+		prefix = "所有入口处<url>(也探索标题)</url>...";
+		page_info = printf("当前探索到%s",prefix);
 	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
-		prefix = "第2页<url>(不探索标题)</url>...";
-		page_info = "当前探索到第2页<url>(不探索标题)</url>"
+		prefix = "内容入口处<url>(不探索标题)</url>...";
+		page_info = printf("当前探索到%s",prefix);
 	}else {
-		prefix = "深入的<url>第" + pages + "页</url>";
+		page_info = "当前探索到第" + pages + "页";
+		prefix = "深入的<url>第" + pages + "页</url>...";
 	}
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
@@ -205,18 +207,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		if (data["query-continue"] !== undefined) //拥有下一页的玩意
 		{
 			has_next_page = true; //还有更多页
-			page_info = page_info + ",探索到还有<dim>[第" + (pages + 1) + "页]</dim>";
+			page_info += printf(",探索到还有<dim>[第%s页]</dim>", (pages + 1));
 		}
 		var search_result = data.query.search; //返回结果
-		if (lastsearch && search_result.length == 0 && results.length == 0) //到最后一步了，全局是0
-		{
-			var perfix_info = "";
-			if (pages > 1) {
-				perfix_info = "在" + pages + "页"
-			}
-			put_info(perfix_info + "探索不到更多信息,最好<url>直接进入</url>航海见识探索[<match>" + text + "</match>]"); //发绿？
-			return false;
-		}
 		//开始释放结果
 		for (var index = 0; index < search_result.length; index++) //递归啊，建造啊
 		{
@@ -243,14 +236,19 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			//递归
 			get_search_text(text, edit_type, results, callback, true);
 		} else {//会有结果吗
-			put_info("这是深入探索[<url>" + text + "</url>]获得的发现..." + page_info); //发绿？
+
 			if (results.length==0) //没有任何结果
 			{
+				put_info(printf("%s探索不到更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]",[prefix,text])); //发绿？
+
 				results.push({
-				content: "nothing i got:)", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
-				description: sprintf("探索失败/t   关于<url>%s</url>我即便深入探索也啥都没发现,试试模糊*替换字符?", text)   //这是描述
+				content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
+				description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text)   //这是描述
 				});
+			}else{ //获得了不少结果
+					put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s",[text, page_info])); //发绿？
 			}
+
 			callback(results); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
@@ -276,7 +274,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		if (result_arry.length == 0) {
 			//切换到别的方式去
 			if (!edit_type.isedit) {
-				put_info("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>[" + text + "]</url>的玩意:");
+				put_info(printf("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>[%s]</url>的玩意:", text));
 			}
 			freeze(); //冻结
 			get_search_text(text, edit_type, results, callback, false); //非最后一次
@@ -383,7 +381,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			if (issth(titles_arr[title_get]) && titles_arr[title_get].to != "") //检查重定向
 			{
 				should_get = titles_arr[title_get].to; //指向重定向
-				show_info += sprintf("被指引!它将带到<url>[%s]</url>!\t", should_get);
+				show_info += printf("被指引!它将带到<url>[%s]</url>!\t", should_get);
 				if (str_is_about_same(title_get, text)) //如果默认就有重定向，忽视大小写
 				{
 					if (edit_type.isedit) {

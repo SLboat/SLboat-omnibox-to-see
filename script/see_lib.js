@@ -133,10 +133,10 @@ function copy_text(text) {
  * 如果是单项，不需要数组，这里会转换
  * 如果多项，必须数组，否则只转换第一项
  * 实现部分，前者是字符串，使用%s作为匹配，后者是匹配组们 
- * 一个使用就像是：sprintf("hello%s,why %s is here",["you","me"])
+ * 一个使用就像是：printf("hello%s,why %s is here",["you","me"])
  * todo，增加五个附加值，避免每次要数组
  */
-function sprintf(str, subs) {
+function printf(str, subs) {
 	if (typeof subs != typeof []) { subs = [subs]; } //非常有趣的转录
 	if (!str || !subs) { return str; }
 	var ret=[];
