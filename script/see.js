@@ -436,8 +436,8 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
-	//仅获得六个
-	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
+	//仅获得十个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
+	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=10&rctype=edit%7Cnew";
     //获得最后一次操作，可能丢失最新的，暂时关闭
     // req_url += "&rctoponly";
 	//如何移出去呢
