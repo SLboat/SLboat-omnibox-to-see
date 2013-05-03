@@ -12,6 +12,8 @@ isdebug = false;
 var perfix_copy = ".c"; //从标题复制文本
 var perfix_help = ".?"; //提供帮助信息
 var perfix_edit = "+"; //前缀编辑模式
+var perfix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
+
 var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var perfix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
