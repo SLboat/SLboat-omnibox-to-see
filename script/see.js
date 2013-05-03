@@ -78,7 +78,7 @@ function edit_chk(text) { //检查编辑模式
  * 这是一切工作的核心
  * todo：拆散化，建立子函数们一起工作
  */
-chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
+chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	var req_url; //申请url，json
 	var str_new_win = "进入<url>当前海域</url>"; //新窗口的玩意？
 
@@ -121,6 +121,11 @@ chrome.omnibox.onInputChanged.addListener(function (text, suggest) {
 	}
 
 	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
+
+	//重新封装一个可靠的传回去
+	var suggest = function(results){
+		send_suggest(ominibox_ecsape_xmlstr(results));
+	}
 
 	//重定向无需初始化
 	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无

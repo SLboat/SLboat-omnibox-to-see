@@ -94,6 +94,26 @@ function slboat_get_match(snippet) {
 	return snippet;
 }
 
+/* 地址栏的小玩意，逃脱xml字符
+ * 由小约子发现的# Bug而来。
+ *	传入完整的结果
+ * 传回逃跑了xml字符的结果
+ */
+
+function ominibox_ecsape_xmlstr(results) {
+	//开始检阅xml字符
+	for (one in results)
+	{
+		if ((results[one].description).search("&")>-1) //字符串的搜索大于-1才被释放，-1的是绝对好人
+		{
+			//这家伙有问题，开始处置程序
+			results[one].description=results[one].description.replace("&","&amp;")
+		}
+	}
+	//送回去所有检阅完毕的人们
+	return results;
+}
+
 /* 匹配忽略大小写是否一致
  * 传入比较1、比较2
  * 返回是否非大小写一致
