@@ -101,17 +101,49 @@ function slboat_get_match(snippet) {
  */
 
 function ominibox_ecsape_xmlstr(results) {
-	//开始检阅xml字符
-	for (one in results)
-	{
-		if ((results[one].description).search("&")>-1) //字符串的搜索大于-1才被释放，-1的是绝对好人
-		{
-			//这家伙有问题，开始处置程序
-			results[one].description=results[one].description.replace("&","&amp;")
-		}
-	}
+    //开始检阅xml字符
+    for (one in results)
+    {
+        if (results[one].description.search("&")>-1) //字符串的搜索大于-1才被释放，-1的是绝对好人
+        {
+            //这家伙有问题，开始处置程序
+            results[one].description=results[one].description.replace("&","&amp;")
+        }
+    }
 	//送回去所有检阅完毕的人们
 	return results;
+}
+
+/* 修理地址栏的真实长度
+ * 背后的库都是小约子制造的小水手们的工作
+ * 它们被发现并且被解决了
+ * 传入描述信息，必须遵守长度协定
+ * 传回修复的描述信息
+ */
+function ominibox_fix_desc(results){
+    var longer=0; //最长的家伙
+    for (one in results){
+        var table_arr = results[one].description.split("\t"); //切割标题
+        if (table_arr.length > 1 && str_getfixedlen(table_arr[0])>longer){
+            longer=str_getfixedlen(table_arr[0]);//新的长度老大
+        }
+    }
+    if (longer==0){
+        longer==60; //默认的60，小约子的风格
+    }else{
+        longer+=8; //最长的加10，这就够了
+    }
+    //切割标题
+    for (one in results){
+        //开始获得一个
+        var table_arr = results[one].description.split("\t");
+        if (table_arr.length > 1){ //最坏的情况，没有切割，那时候是1
+            table_arr[0]=str_fixblanks(table_arr[0],longer); //处理标题部分
+            //组合，返回，送出
+            results[one].description=table_arr.join("\t");
+        }
+    }
+    return results;
 }
 
 /* 匹配忽略大小写是否一致

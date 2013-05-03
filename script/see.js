@@ -126,7 +126,10 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 
 	//重新封装一个可靠的传回去
 	var suggest = function(results){
-		send_suggest(ominibox_ecsape_xmlstr(results));
+                                          results=ominibox_ecsape_xmlstr(results);
+                                          results=ominibox_fix_desc(results);
+                                          //传出结果
+                                          send_suggest(results);
 	}
 
 	//重定向无需初始化
