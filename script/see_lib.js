@@ -1,13 +1,6 @@
 /* 字符串处理的子函数们，它们为字符串而生 */
 /* todo,匹配一个尾巴是否一致的函数 */
 
-var fonts_fix;
-
-function Fonts_fix_oninit(){
-	// 开始生成值在这里
-	fonts_fix = new Fonts_fix(2); //tohoma方式
-}
-
 /* 匹配尾部字符是否一致，并进行切割
  * 送入原始字符，匹配字符
  * 返回: 布尔值，判决结果

@@ -4,6 +4,7 @@ var freeze_flag = false; //冻结更新
 
 /* 调试配置 */
 isdebug = false;
+var fonts_fix;
 
 /* 常规性配置
  * 可以量化为object？
@@ -126,10 +127,14 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 
 	//重新封装一个可靠的传回去
 	var suggest = function(results){
-                                          results=ominibox_ecsape_xmlstr(results);
-                                          results=ominibox_fix_desc(results);
-                                          //传出结果
-                                          send_suggest(results);
+										  results=ominibox_ecsape_xmlstr(results);
+										  if (!edit_type.isfind)
+										  {
+		  										  //results=ominibox_fix_desc(results); //暂时去除修理描述信息
+
+										  }
+										  //传出结果
+										  send_suggest(results);
 	}
 
 	//重定向无需初始化
@@ -670,4 +675,10 @@ function get_help(callback) {
 	//别的玩意
 	callback(results); //返回
 	return true;
+}
+
+/* load执行事件 */
+window.onload = function() {
+	// 开始生成值在这里
+	fonts_fix = new Fonts_fix(2); //tohoma方式
 }
