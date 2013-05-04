@@ -1,5 +1,12 @@
 /* 字符串处理的子函数们，它们为字符串而生 */
-/* todo,匹配一个尾巴是否一致的函数
+/* todo,匹配一个尾巴是否一致的函数 */
+
+var fonts_fix;
+
+function Fonts_fix_oninit(){
+	// 开始生成值在这里
+	fonts_fix = new Fonts_fix(2); //tohoma方式
+}
 
 /* 匹配尾部字符是否一致，并进行切割
  * 送入原始字符，匹配字符
@@ -121,11 +128,12 @@ function ominibox_ecsape_xmlstr(results) {
  * 传回修复的描述信息
  */
 function ominibox_fix_desc(results){
+	//如何确保新的事件已经完成？进行初次调动化
     var longer=0; //最长的家伙
     for (one in results){
         var table_arr = results[one].description.split("\t"); //切割标题
-        if (table_arr.length > 1 && str_getfixedlen(table_arr[0])>longer){
-            longer=str_getfixedlen(table_arr[0]);//新的长度老大
+        if (table_arr.length > 1 && fonts_fix.len(table_arr[0])>longer){
+            longer=fonts_fix.len(table_arr[0]);//新的长度老大
         }
     }
     if (longer==0){
@@ -138,7 +146,7 @@ function ominibox_fix_desc(results){
         //开始获得一个
         var table_arr = results[one].description.split("\t");
         if (table_arr.length > 1){ //最坏的情况，没有切割，那时候是1
-            table_arr[0]=str_fixblanks(table_arr[0],longer); //处理标题部分
+            table_arr[0]=fonts_fix.fix(table_arr[0],longer); //处理标题部分
             //组合，返回，送出
             results[one].description=table_arr.join("\t");
         }
