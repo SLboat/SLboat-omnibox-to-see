@@ -130,8 +130,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 										  results=ominibox_ecsape_xmlstr(results);
 										  if (!edit_type.isfind)
 										  {
-		  										  //results=ominibox_fix_desc(results); //暂时去除修理描述信息
-
+		  										  results=ominibox_fix_desc(results); //暂时去除修理描述信息
 										  }
 										  //传出结果
 										  send_suggest(results);
