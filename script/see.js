@@ -124,14 +124,20 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	}
 
 	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
-
+	
 	//重新封装一个可靠的传回去
 	var suggest = function(results){
-										  results=ominibox_ecsape_xmlstr(results);
+										//处理寻找模式不需要
 										  if (!edit_type.isfind)
 										  {
-		  										  //results=ominibox_fix_desc(results); //暂时去除修理描述信息
+												  fonts_fix_load(); //载入字体设置-如果修改了
+												  if (fonts_fix.iswork) //如果在工作的话
+												  {
+		  		  										  results=ominibox_fix_desc(results); //暂时去除修理描述信息
+												  }
 										  }
+										  //处理掉干扰xml字串，看起来是最后的了
+  										  results=ominibox_ecsape_xmlstr(results);
 										  //传出结果
 										  send_suggest(results);
 	}
@@ -450,10 +456,10 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
-	//仅获得十个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=10&rctype=edit%7Cnew";
+	//仅获得6个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
+	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
     //获得最后一次操作，可能丢失最新的，暂时关闭
-    // req_url += "&rctoponly";
+    req_url += "&rctoponly";
 	//如何移出去呢
 	currentRequest = get_json(req_url, function (data) {
 		var results = [];
@@ -678,6 +684,16 @@ function get_help(callback) {
 
 /* load执行事件 */
 window.onload = function() {
+	//载入保存的类型
+	localStorage.font_type= localStorage.font_type || "none"; //未定义的话
 	// 开始生成值在这里
-	fonts_fix = new Fonts_fix(2); //tohoma方式
+	fonts_fix = new Fonts_fix(localStorage.font_type); //读取设置
+}
+
+/* 有了工厂又做下面的事情... */
+
+/* 初始化字体宽度修补的玩意 */
+function fonts_fix_load(){
+	localStorage.font_type= localStorage.font_type || "none"; //未定义的话
+	fonts_fix.set(localStorage.font_type); //保存设置
 }

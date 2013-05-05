@@ -3,6 +3,7 @@
    "background": {
 	  "page":"see.html"
    },
+   "options_page": "set.html",
    "description": "森亮号航海见识搜索，快速的寻找，探索，发现森亮航海见识！",
    "icons": {
       "48": "img/see_48.png",
@@ -16,6 +17,6 @@
 	"tabs",
 	"http://see.sl088.com/*"
 	],
-   "version": "3.15.3",
+   "version": "3.15.6",
    "manifest_version": 2
 }

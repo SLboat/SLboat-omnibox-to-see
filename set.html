@@ -6,11 +6,8 @@
       <link rel="icon" type="image/png" href="./img/icon_32.png" />
       <!-- 引入jQuery，进入新时代 -->
       <script src="./script/jquery.min.js"></script>
-      <!-- 呼叫API -->
-      <script type="text/javascript" src="./script/webtoolkit.md5.js"></script>
-      <script src="./script/get_flickr_api_token.js"></script>
       <!-- 设置用到JS -->
-      <script src="./script/ink_config.js"></script>
+      <script src="./script/see_config.js"></script>
       <link href="set.css" rel="stylesheet" type="text/css" />
    </head>
    
@@ -25,19 +22,21 @@
             <div class="section-header first">字体设置</div>
             <p>
 				<span class ="tip">配置你的系统字体，让对齐系统适应它！ </span>
-               <br />	<span style="font-size: 12px;">系统字体为：</span>
+               <br />	<span style="font-size: 12px;">你的系统字体为：</span>
 
-               <select name="ink_type" id="ink_for">
-                  <option selected="selected" value="0">等宽字体</option>
-                  <option value="1">雅黑字体</option>
-                  <option value="2">tohama</option>
+               <select name="font_type" id="font_type">
+                  <option selected="selected" value="none">不要对齐</option>
+                  <option value="same">等宽字体</option>
+                  <option value="yahei">雅黑字体</option>
+                  <option value="tahoma">tahoma(它后妈字体)</option>
                </select>
-			   <span style="font-size: 12px;">毫秒</span>
+			   
             </p>
 			<hr/>
  
          </div>
          <div id="footer">
+ 			<div id="save_info" >应该保存进去了！不然为啥按钮都黑了！</div>
             <button id="save-button" style="font-weight:bold;margin-right: 10px;">保存</button>
             <button id="cancel-button">取消</button>
          </div>
