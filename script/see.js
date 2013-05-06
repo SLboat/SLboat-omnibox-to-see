@@ -6,7 +6,9 @@ var freeze_flag = false; //冻结更新
 isdebug = false; //网络调试
 isdebug_fonts_fix  = true;  //字体调试
 
+/* 工厂声明 */
 var fonts_fix;
+var redict_list
 
 /* 常规性配置
  * 可以量化为object？
@@ -686,10 +688,12 @@ function get_help(callback) {
 
 /* load执行事件 */
 window.onload = function() {
-	//载入保存的类型
-	localStorage.font_type= localStorage.font_type || "none"; //未定义的话
+	//window 得到全局变量，不加var也是（隐性）
 	// 开始生成值在这里
-	fonts_fix = new Fonts_fix(localStorage.font_type); //读取设置
+	window.fonts_fix = new Fonts_fix(); //默认不赋值，后期自己去处理
+	/* 生产两个工厂 */
+	window.redict_list = new Redirect(); //工厂：重定向缓存列表
+	window.normal_list = new Redirect(); //工厂：一个正常化表
 }
 
 /* 有了工厂又做下面的事情... */

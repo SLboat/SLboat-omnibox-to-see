@@ -281,7 +281,3 @@ Redirect.prototype = { //零件构建
 	}
 
 } //部件构造结束
-
-/* 生产两个工厂 */
-var redict_list = new Redirect(); //工厂：重定向缓存列表
-var normal_list = new Redirect(); //工厂：一个正常化表
