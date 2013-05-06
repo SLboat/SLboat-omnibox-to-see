@@ -145,6 +145,11 @@ function ominibox_fix_desc(results){
             results[one].description=table_arr.join("\t");
         }
     }
+	//调试字体信息
+	if (isdebug_fonts_fix)
+	{
+		results.forEach(function(i,index,arr){console.log(i.description.replace(/<\/?match>/g,"").replace(/<\/?dim>/g,""))})
+	}
     return results;
 }
 

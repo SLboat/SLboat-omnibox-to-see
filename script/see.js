@@ -3,7 +3,9 @@ var site_url = "http://see.sl088.com"; //请求站点
 var freeze_flag = false; //冻结更新
 
 /* 调试配置 */
-isdebug = false;
+isdebug = false; //网络调试
+isdebug_fonts_fix  = true;  //字体调试
+
 var fonts_fix;
 
 /* 常规性配置
