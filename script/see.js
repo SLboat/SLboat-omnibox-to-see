@@ -248,10 +248,15 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 				} else
 					diff_info = "<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>";
 			}
+			var desc_title = title_get;
+			if (edit_type.isfind)
+			{
+				desc_title=ominibox_package_desc_title(title_get); //搜索模式封装，它是单独的
+			}
 			//push入数据，它是个数组，实际上
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
-				description: ominibox_package_desc_title(title_get) + near_str + diff_info //这是描述
+				description: desc_title + near_str + diff_info //这是描述
 			});
 		}
 		if (!lastsearch && search_result.length < 5 && pages == 1) //结果不足，只是在第一页
