@@ -139,7 +139,8 @@ function ominibox_fix_desc(results){
         //开始获得一个
         var table_arr = results[one].description.split("\t");
         if (table_arr.length > 1){ //最坏的情况，没有切割，那时候是1
-			table_arr[0]=table_arr[0]+"<dim>.</dim>"; //加上[.]，不然可能发生糟糕的事情，字符长度不一致
+			//采用[封装],因为远仔看起来认为它看着很不错
+			table_arr[0]="<dim>[[</dim>" + table_arr[0] +"<dim>]]</dim>"; //加上[.]，不然可能发生糟糕的事情，字符长度不一致
             table_arr[0]=fonts_fix.fix(table_arr[0],longer); //处理标题部分
             //组合，返回，送出
             results[one].description=table_arr.join("\t");
