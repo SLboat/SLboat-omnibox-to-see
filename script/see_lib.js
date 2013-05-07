@@ -1,10 +1,9 @@
 /* 字符串处理的子函数们，它们为字符串而生 */
 /* todo,匹配一个尾巴是否一致的函数 */
-
 /* 匹配尾部字符是否一致，并进行切割
  * 送入原始字符，匹配字符
  * 返回: 布尔值，判决结果
-*/
+ */
 
 function str_chklast(text, last) {
 	//如果是正则表达式方式，从尾部匹配开始，计算是否有效匹配获得
@@ -101,15 +100,14 @@ function slboat_get_match(snippet) {
  */
 
 function ominibox_ecsape_xmlstr(results) {
-    //开始检阅xml字符
-    for (one in results)
-    {
-        if (results[one].description.search("&")>-1) //字符串的搜索大于-1才被释放，-1的是绝对好人
-        {
-            //这家伙有问题，开始处置程序
-            results[one].description=results[one].description.replace("&","&amp;")
-        }
-    }
+	//开始检阅xml字符
+	for (one in results) {
+		if (results[one].description.search("&") > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
+		{
+			//这家伙有问题，开始处置程序
+			results[one].description = results[one].description.replace("&", "&amp;")
+		}
+	}
 	//送回去所有检阅完毕的人们
 	return results;
 }
@@ -120,38 +118,50 @@ function ominibox_ecsape_xmlstr(results) {
  * 传入描述信息，必须遵守长度协定
  * 传回修复的描述信息
  */
-function ominibox_fix_desc(results){
+
+function ominibox_fix_desc(results) {
 	//如何确保新的事件已经完成？进行初次调动化
-    var longer=0; //最长的家伙
-    for (one in results){
-        var table_arr = results[one].description.split("\t"); //切割标题
-        if (table_arr.length > 1 && fonts_fix.len(table_arr[0])>longer){
-            longer=fonts_fix.len(table_arr[0]);//新的长度老大
-        }
-    }
-    if (longer==0){
-        longer==60; //默认的60，小约子的风格
-    }else{
-        longer+=8; //最长的加10，这就够了
-    }
-    //切割标题
-    for (one in results){
-        //开始获得一个
-        var table_arr = results[one].description.split("\t");
-        if (table_arr.length > 1){ //最坏的情况，没有切割，那时候是1
-			//采用[封装],因为远仔看起来认为它看着很不错
-			table_arr[0]="<dim>[[</dim>" + table_arr[0] +"<dim>]]</dim>"; //加上[.]，不然可能发生糟糕的事情，字符长度不一致
-            table_arr[0]=fonts_fix.fix(table_arr[0],longer); //处理标题部分
-            //组合，返回，送出
-            results[one].description=table_arr.join("\t");
-        }
-    }
-	//调试字体信息
-	if (isdebug_fonts_fix)
-	{
-		results.forEach(function(i,index,arr){console.log(i.description.replace(/<\/?match>/g,"").replace(/<\/?dim>/g,""))})
+	var longer = 0; //最长的家伙
+	for (one in results) {
+		var table_arr = results[one].description.split("\t"); //切割标题
+		if (table_arr.length > 1 && fonts_fix.len(table_arr[0]) > longer) {
+			longer = fonts_fix.len(table_arr[0]); //新的长度老大
+		}
 	}
-    return results;
+	if (longer == 0) {
+		longer == 60; //默认的60，小约子的风格
+	} else {
+		longer += 8; //最长的加10，这就够了
+	}
+	//切割标题
+	for (one in results) {
+		//开始获得一个
+		var table_arr = results[one].description.split("\t");
+		if (table_arr.length > 1) { //最坏的情况，没有切割，那时候是1
+			table_arr[0] = ominibox_package_desc_title(table_arr[0]); //加上[.]，不然可能发生糟糕的事情，字符长度不一致
+			table_arr[0] = fonts_fix.fix(table_arr[0], longer); //处理标题部分
+			//组合，返回，送出
+			results[one].description = table_arr.join("\t");
+		}
+	}
+	//调试字体信息
+	if (isdebug_fonts_fix) {
+		results.forEach(function (i, index, arr) {
+			console.log(i.description.replace(/<\/?match>/g, "").replace(/<\/?dim>/g, ""))
+		})
+	}
+	return results;
+}
+
+/* 封装起来见识备注的标记信息 
+ * 传入见识标题
+ * 使用dim的封装标记进行封装
+ */
+
+function ominibox_package_desc_title(title) {
+	//采用[封装],因为远仔看起来认为它看着很不错
+	//再加上一层[]，因为它需要一点别的看起来更加的怪异
+	return "<dim>[[</dim>" + title + "<dim>]]</dim>";
 }
 
 /* 匹配忽略大小写是否一致
@@ -196,22 +206,37 @@ function copy_text(text) {
  * 一个使用就像是：printf("hello%s,why %s is here",["you","me"])
  * todo，增加五个附加值，避免每次要数组
  */
+
 function printf(str, subs) {
-	if (typeof subs != typeof []) { subs = [subs]; } //非常有趣的转录
-	if (!str || !subs) { return str; }
-	var ret=[];
-	var s=str.split(/(%s|\$[0-9]+)/); //这是非常有趣的用法，js的字符串灵活性极大，IE下看起来不兼容
-	var i=0;
+	if (typeof subs != typeof[]) {
+		subs = [subs];
+	} //非常有趣的转录
+	if (!str || !subs) {
+		return str;
+	}
+	var ret = [];
+	var s = str.split(/(%s|\$[0-9]+)/); //这是非常有趣的用法，js的字符串灵活性极大，IE下看起来不兼容
+	var i = 0;
 	do {
 		ret.push(s.shift()); //看起来是传入字符
-		if ( !s.length ) { break; }
-		var cmd=s.shift();
+		if (!s.length) {
+			break;
+		}
+		var cmd = s.shift();
 		if (cmd == '%s') {
-			if ( i < subs.length ) { ret.push(subs[i]); } else { ret.push(cmd); }
+			if (i < subs.length) {
+				ret.push(subs[i]);
+			} else {
+				ret.push(cmd);
+			}
 			++i;
 		} else {
-			var j=parseInt( cmd.replace('$', ''), 10 ) - 1;
-			if ( j > -1 && j < subs.length ) { ret.push(subs[j]); } else { ret.push(cmd); }
+			var j = parseInt(cmd.replace('$', ''), 10) - 1;
+			if (j > -1 && j < subs.length) {
+				ret.push(subs[j]);
+			} else {
+				ret.push(cmd);
+			}
 		}
 	} while (s.length > 0);
 	return ret.join('');

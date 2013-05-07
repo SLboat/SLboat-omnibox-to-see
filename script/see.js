@@ -4,7 +4,7 @@ var freeze_flag = false; //冻结更新
 
 /* 调试配置 */
 isdebug = false; //网络调试
-isdebug_fonts_fix  = true;  //字体调试
+isdebug_fonts_fix = true; //字体调试
 
 /* 工厂声明 */
 var fonts_fix;
@@ -128,22 +128,21 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	}
 
 	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
-	
+
 	//重新封装一个可靠的传回去
-	var suggest = function(results){
-										//处理寻找模式不需要
-										  if (!edit_type.isfind)
-										  {
-												  fonts_fix_load(); //载入字体设置-如果修改了
-												  if (fonts_fix.iswork) //如果在工作的话
-												  {
-		  		  										  results=ominibox_fix_desc(results); //暂时去除修理描述信息
-												  }
-										  }
-										  //处理掉干扰xml字串，看起来是最后的了
-  										  results=ominibox_ecsape_xmlstr(results);
-										  //传出结果
-										  send_suggest(results);
+	var suggest = function (results) {
+		//处理寻找模式不需要
+		if (!edit_type.isfind) {
+			fonts_fix_load(); //载入字体设置-如果修改了
+			if (fonts_fix.iswork) //如果在工作的话
+			{
+				results = ominibox_fix_desc(results); //暂时去除修理描述信息
+			}
+		}
+		//处理掉干扰xml字串，看起来是最后的了
+		results = ominibox_ecsape_xmlstr(results);
+		//传出结果
+		send_suggest(results);
 	}
 
 	//重定向无需初始化
@@ -184,7 +183,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 
 function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
-	var page_info = "";//页面信息
+	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
 	//超过一页，不搜索标题先了
@@ -209,11 +208,11 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
 		prefix = "所有入口处<url>(也探索标题)</url>...";
-		page_info = printf("当前探索到%s",prefix);
+		page_info = printf("当前探索到%s", prefix);
 	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
 		prefix = "内容入口处<url>(不探索标题)</url>...";
-		page_info = printf("当前探索到%s",prefix);
-	}else {
+		page_info = printf("当前探索到%s", prefix);
+	} else {
 		page_info = "当前探索到第" + pages + "页";
 		prefix = "深入的<url>第" + pages + "页</url>...";
 	}
@@ -252,25 +251,25 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			//push入数据，它是个数组，实际上
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
-				description: title_get + near_str + diff_info //这是描述
+				description: ominibox_package_desc_title(title_get) + near_str + diff_info //这是描述
 			});
 		}
 		if (!lastsearch && search_result.length < 5 && pages == 1) //结果不足，只是在第一页
 		{
 			//递归
 			get_search_text(text, edit_type, results, callback, true);
-		} else {//会有结果吗
+		} else { //会有结果吗
 
-			if (results.length==0) //没有任何结果
+			if (results.length == 0) //没有任何结果
 			{
-				put_info(printf("%s探索不到更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]",[prefix,text])); //发绿？
+				put_info(printf("%s探索不到更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
 
 				results.push({
-				content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
-				description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text)   //这是描述
+					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
+					description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text) //这是描述
 				});
-			}else{ //获得了不少结果
-					put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s",[text, page_info])); //发绿？
+			} else { //获得了不少结果
+				put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s", [text, page_info])); //发绿？
 			}
 
 			callback(results); //回调回去
@@ -462,8 +461,8 @@ function slboat_getrecently(callback) {
 	//todo，函数式改写，太有点混世了
 	//仅获得6个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
 	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
-    //获得最后一次操作，可能丢失最新的，暂时关闭
-    req_url += "&rctoponly";
+	//获得最后一次操作，可能丢失最新的，暂时关闭
+	req_url += "&rctoponly";
 	//如何移出去呢
 	currentRequest = get_json(req_url, function (data) {
 		var results = [];
@@ -687,7 +686,7 @@ function get_help(callback) {
 }
 
 /* load执行事件 */
-window.onload = function() {
+window.onload = function () {
 	//window 得到全局变量，不加var也是（隐性）
 	// 开始生成值在这里
 	window.fonts_fix = new Fonts_fix(); //默认不赋值，后期自己去处理
@@ -699,7 +698,8 @@ window.onload = function() {
 /* 有了工厂又做下面的事情... */
 
 /* 初始化字体宽度修补的玩意 */
-function fonts_fix_load(){
-	localStorage.font_type= localStorage.font_type || "none"; //未定义的话
+
+function fonts_fix_load() {
+	localStorage.font_type = localStorage.font_type || "none"; //未定义的话
 	fonts_fix.set(localStorage.font_type); //保存设置
 }
