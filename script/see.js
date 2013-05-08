@@ -14,7 +14,6 @@ var redict_list
  * 可以量化为object？
  * 支持array方式？多种匹配？
  */
- //todo:事实上这里已经不是suffix，而是在后面了
 var suffix_copy = ".c"; //从标题复制文本
 var suffix_help = ".?"; //提供帮助信息
 var suffix_edit = "+"; //前缀编辑模式
@@ -24,8 +23,8 @@ var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似�
 var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
 var suffix_search_ime = "。"; //输入法生成的全角也认
 var suffix_search_fulltext = "-"; //仅搜索全部文本
-
-var trim_edit_watchlist = "w "; //查看监视列表，需要空格开头的w，而且仅仅是w
+//=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
+var trim_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
 
 /* 其他配置，将来可设置 */
 var need_more = true; //需要更多信息，用来过滤更多信息
@@ -37,14 +36,15 @@ var need_more = true; //需要更多信息，用来过滤更多信息
 
 function edit_chk(text) { //检查编辑模式
 	var edit_type = {
-		isedit: false,
-		isnew: false,
-		newtext: text,
+		isedit: false, //编辑模式需要
+		isnew: false, //新标签页
+		newtext: text, //新的文字-传入给搜索
 		isfind: false, //搜索模式
 		onlytxt: false, //只搜索内容
 		iscopy: false, //需要复制
-		ishelp: false,
-		Srpages: 1 //页数1，第一页开始
+		ishelp: false, //需要帮助
+		Srpages: 1, //页数1，第一页开始
+		iswatch: false //最近的监视列表
 	}; //返回构造
 
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
@@ -81,11 +81,9 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
 	}else if (str_chklast(text, trim_edit_watchlist)) //监视列表在这里
 	{
-		//如果是"[ w]作为开头
-		if ()
-		{
-			str_chklast(text, trim_edit_watchlist)
-		}
+		//如果是"[=w]作为开头
+		edit_type.iswatch = true;//监视列表
+		edit_type.newtext = str_getlast(text, trim_edit_watchlist.length).str
 	}
 
 	return edit_type; //返回构建
@@ -96,7 +94,6 @@ function edit_chk(text) { //检查编辑模式
  * todo：拆散化，建立子函数们一起工作
  */
 chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
-	var req_url; //申请url，json
 	var str_new_win = "进入<url>当前海域</url>"; //新窗口的玩意？
 
 	var edit_type; //编辑模式的玩意
@@ -111,15 +108,16 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	}
 
 	//处理编辑模式字符，看起来没啥坏处
-	edit_type = edit_chk(text); //检查类型
+	edit_type = edit_chk(text); //检查类型，并且赋值
 	text = edit_type.newtext; //文字也处理了
+
+	/* 特殊功能模式，这里不需要更多文本，也不能重复属性，只会执行第一个 */
 	if (edit_type.ishelp) { //一些帮助{
 		get_help(function (results) {
 			send_suggest(results); //回调输出			
 		});
 		return true; //离开
-	}
-	if (edit_type.iscopy) //复制模式
+	}else	if (edit_type.iscopy) //复制模式
 	{
 		if (text.length == 0) {
 			put_info("<url>发现了[.c]</url>,看起来需要得到见识链接,但是<url>没有任何线索</url>给予,噢见鬼！");
@@ -128,7 +126,15 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 			put_info("<url>发现了[.c]</url>,看来需要得到见识链接,但未检查到<url>" + make_copy_text + "</url>拥有完全匹配,将不复制");
 		}
 		freeze(); //冻结显示栏
+	}else	if (edit_type.iswatch)//监视列表
+		{
+			slboat_getwatchlist(text,function(results){
+				suggest(results);
+			}); //来一些最近的监视列表
+			return true; //完成工作
 	}
+
+	//todo：直接放入到别的地方，或者封装到edit_type里
 	if (edit_type.isnew) {
 		//新的标记方式，字符串全部索引起来？
 		str_new_win = "进入<url>最近的海域</url>";
@@ -229,7 +235,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
-	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text);
+	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
 	req_url += "&srnamespace=0%7C12"; //支持主要命名空间、帮助命名空间
 	if (pages > 2) { //第二页开始切换
@@ -304,7 +310,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
-	req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(text); //构造字串
+	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(text); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
 		var results = [];
@@ -476,7 +482,7 @@ function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
 	//仅获得6个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
+	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
 	//获得最后一次操作，可能丢失最新的，暂时关闭
 	req_url += "&rctoponly";
 	//如何移出去呢
@@ -507,8 +513,8 @@ function slboat_getrecently(callback) {
 
 function slboat_getwatchlist(callback) {
 	//* 访问url，默认获取6个，看起来足够了
-	req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"
-	
+	var req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
+	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>"); //提醒文字
 
 }
 
