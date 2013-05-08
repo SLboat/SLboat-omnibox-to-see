@@ -12,8 +12,9 @@ var redict_list
 
 /* 常规性配置
  * 可以量化为object？
- * 支持array方式？多种匹配？
  */
+ //todo: 支持array方式？多种匹配？或许是支持|分割模式，在字符串处理的时候进行匹配！
+ //          或者就["+",".c"]，这样好了:)，单个的时候也支持就像printf
 var suffix_copy = ".c"; //从标题复制文本
 var suffix_help = ".?"; //提供帮助信息
 var suffix_edit = "+"; //前缀编辑模式
@@ -24,7 +25,7 @@ var suffix_search = "."; //从标题到达文本，如果回退到.那么又是�
 var suffix_search_ime = "。"; //输入法生成的全角也认
 var suffix_search_fulltext = "-"; //仅搜索全部文本
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
-var trim_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
+var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
 
 /* 其他配置，将来可设置 */
 var need_more = true; //需要更多信息，用来过滤更多信息
@@ -79,11 +80,11 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.isfind = true; //寻找模式
 		edit_type.onlytxt = true; //紧紧全文
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
-	}else if (str_chklast(text, trim_edit_watchlist)) //监视列表在这里
+	}else if (str_chkfirst(text, prefix_edit_watchlist)) //监视列表在这里
 	{
 		//如果是"[=w]作为开头
 		edit_type.iswatch = true;//监视列表
-		edit_type.newtext = str_getlast(text, trim_edit_watchlist.length).str
+		edit_type.newtext = str_getfirst(text, prefix_edit_watchlist.length).str
 	}
 
 	return edit_type; //返回构建
@@ -95,7 +96,6 @@ function edit_chk(text) { //检查编辑模式
  */
 chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	var str_new_win = "进入<url>当前海域</url>"; //新窗口的玩意？
-
 	var edit_type; //编辑模式的玩意
 
 	defreeze(); //解除冻结
@@ -105,6 +105,22 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 		currentRequest.onreadystatechange = null;
 		currentRequest.abort();
 		currentRequest = null;
+	}
+
+	/* 重新封装一个可靠的传回去的回传函数 */
+	var suggest = function (results) {
+		//处理寻找模式不需要
+		if (!edit_type.isfind) {
+			fonts_fix_load(); //载入字体设置-如果修改了
+			if (fonts_fix.iswork) //如果在工作的话
+			{
+				results = ominibox_fix_desc(results); //暂时去除修理描述信息
+			}
+		}
+		//处理掉干扰xml字串，看起来是最后的了
+		results = ominibox_ecsape_xmlstr(results);
+		//传出结果
+		send_suggest(results);
 	}
 
 	//处理编辑模式字符，看起来没啥坏处
@@ -144,22 +160,6 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	}
 
 	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
-
-	//重新封装一个可靠的传回去
-	var suggest = function (results) {
-		//处理寻找模式不需要
-		if (!edit_type.isfind) {
-			fonts_fix_load(); //载入字体设置-如果修改了
-			if (fonts_fix.iswork) //如果在工作的话
-			{
-				results = ominibox_fix_desc(results); //暂时去除修理描述信息
-			}
-		}
-		//处理掉干扰xml字串，看起来是最后的了
-		results = ominibox_ecsape_xmlstr(results);
-		//传出结果
-		send_suggest(results);
-	}
 
 	//重定向无需初始化
 	if (text.length > 0 && text != ".last" && text != "最近") { //过滤最近，但不排除无
@@ -510,12 +510,41 @@ function slboat_getrecently(callback) {
  * 默认进入监视列表查看页
  * 下面就是更多的玩意
  */
-
-function slboat_getwatchlist(callback) {
+//todo: 下一页探索？
+function slboat_getwatchlist(text, callback) {
 	//* 访问url，默认获取6个，看起来足够了
 	var req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
-	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>"); //提醒文字
-
+	perfix_tips="";
+	if (text.length>0)
+	{
+		//有一些别的玩意
+		perfix_tips = ",探索监视列表不需要带别的";
+	}
+	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>"+perfix_tips); //提醒文字
+	currentRequest = get_json(req_url, function (data) {
+		var results = [];
+		//todo:处理无效的情况，待错误信息出现吧
+		var result_arry = data.query.watchlist; //返回的数组，长度0就是没有结果
+		if (typeof (result_arry) == "undefined") {
+			return false; //无效退出
+		}
+		if (result_arry.length>5)
+		{
+			put_info("哇喔!我不幸的探索到很多<url>监视列表</url>....这里是一些最近的玩意:"); //提醒文字
+		}else{
+			put_info(printf("啊哈!探索到了!我不幸的探索到只有%s个<url>监视列表</url>变动:",[result_arry.length])); //提醒文字
+		}
+		//这是每一个结果的处置
+		for (var index = 0; index < result_arry.length; index++) { //处理第一项
+			var title_get = result_arry[index].title //处理这个玩意
+			//push入数据
+			results.push({
+				content: title_get, //这是发送给输入事件的数据
+				description: title_get + "\t       <dim>->监视列表里的变化</dim><url>[" + index + "]</url>" //这是描述
+			});
+		}
+		callback(results); //提交结果，完事
+	});
 }
 
 /* 去除一切提醒的玩意 */
@@ -707,7 +736,7 @@ function get_help(callback) {
 	//搜索模式
 	results.push({
 		content: "别的玩意.?", //更细致的？哦不。。
-		description: "<dim>别的玩意</dim>    <url>[(见识标题)" + suffix_copy + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + suffix_help + "]</url>:提供本帮助信息而已"
+		description: printf("<dim>别的玩意</dim>    <url>[(见识标题)%s]</url>:复制见识标题\t   \t<url>[(见识标题)%s]</url>:提供本帮助信息而已\t   \t <url>[%s]</url>获得监视列表",[suffix_copy, suffix_help, prefix_edit_watchlist])
 	});
 	//去往主页
 	results.push({

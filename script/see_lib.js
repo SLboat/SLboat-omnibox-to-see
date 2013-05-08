@@ -1,10 +1,9 @@
 /* 字符串处理的子函数们，它们为字符串而生 */
-/* todo,匹配一个尾巴是否一致的函数 */
 /* 匹配尾部字符是否一致，并进行切割
  * 送入原始字符，匹配字符
  * 返回: 布尔值，判决结果
  */
-
+//todo，last可为数组，进行连续匹配
 function str_chklast(text, last) {
 	//如果是正则表达式方式，从尾部匹配开始，计算是否有效匹配获得
 	if (last.length > 0) //有传入
@@ -19,7 +18,7 @@ function str_chklast(text, last) {
  * result.last: 最后字符
  * result.str: 切除尾巴后的字符
  */
-
+//todo: 根据文本数组来一个个匹配一个包含一致，并且给出切割后的
 function str_getlast(text, how_long) {
 	if (typeof (how_long) == "undefined") {
 		how_long = 1; //未指定赋予1
@@ -32,6 +31,42 @@ function str_getlast(text, how_long) {
 	}
 	return { //返回全空白
 		"last": "",
+		"str": ""
+	};
+}
+
+/* 匹配头部字符是否一致
+ * 送入原始字符，匹配字符
+ * 返回: 布尔值，判决结果
+ */
+
+function str_chkfirst(text, first) {
+	//如果是正则表达式方式，从尾部匹配开始，计算是否有效匹配获得
+	if (first.length > 0) //有传入
+	{
+		return (str_getfirst(text, first.length).first == first) //匹配送回去有效
+	}
+	return false;
+}
+
+/* 获得开头的字符，如果没有长度就获得第一个
+ * 返回：
+ * result.first: 开头的字符
+ * result.str: 切除开头后的字符
+ */
+
+function str_getfirst(text, how_long) {
+	if (typeof (how_long) == "undefined") {
+		how_long = 1; //未指定赋予1
+	}
+	if (text.length > 0) {
+		return {
+			"first": text.substr(0, how_long), //切断尾部
+			"str": text.substr(how_long, text.length - how_long)
+		}; //返回一个原型包含位置和长度
+	}
+	return { //返回全空白
+		"first": "",
 		"str": ""
 	};
 }
