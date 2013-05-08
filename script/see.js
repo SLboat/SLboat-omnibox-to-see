@@ -14,16 +14,18 @@ var redict_list
  * 可以量化为object？
  * 支持array方式？多种匹配？
  */
-var perfix_copy = ".c"; //从标题复制文本
-var perfix_help = ".?"; //提供帮助信息
-var perfix_edit = "+"; //前缀编辑模式
-var perfix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
+ //todo:事实上这里已经不是suffix，而是在后面了
+var suffix_copy = ".c"; //从标题复制文本
+var suffix_help = ".?"; //提供帮助信息
+var suffix_edit = "+"; //前缀编辑模式
+var suffix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
+var suffix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
+var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
+var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
+var suffix_search_ime = "。"; //输入法生成的全角也认
+var suffix_search_fulltext = "-"; //仅搜索全部文本
 
-var perfix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
-var perfix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
-var perfix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
-var perfix_search_ime = "。"; //输入法生成的全角也认
-var perfix_search_fulltext = "-"; //仅搜索全部文本
+var trim_edit_watchlist = "w "; //查看监视列表，需要空格开头的w，而且仅仅是w
 
 /* 其他配置，将来可设置 */
 var need_more = true; //需要更多信息，用来过滤更多信息
@@ -45,37 +47,45 @@ function edit_chk(text) { //检查编辑模式
 		Srpages: 1 //页数1，第一页开始
 	}; //返回构造
 
-	if (str_chklast(text, perfix_help)) { //当前标签编辑
+	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
-		edit_type.newtext = str_getlast(text, perfix_help.length).str; //返回剩余的一部分
-	} else if (str_chklast(text, perfix_copy)) { //当前标签编辑
+		edit_type.newtext = str_getlast(text, suffix_help.length).str; //返回剩余的一部分
+	} else if (str_chklast(text, suffix_copy)) { //当前标签编辑
 		edit_type.iscopy = true; //设置标记
-		edit_type.newtext = str_getlast(text, perfix_copy.length).str; //返回剩余的一部分
-	} else if (str_chklast(text, perfix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
+		edit_type.newtext = str_getlast(text, suffix_copy.length).str; //返回剩余的一部分
+	} else if (str_chklast(text, suffix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
 		edit_type.isedit = true; //编辑模式
 		edit_type.isnew = true; //单独的标记
-		edit_type.newtext = str_getlast(text, perfix_edit_newtab.length).str; //切除
-	} else if (str_chklast(text, perfix_edit)) { //当前标签编辑
+		edit_type.newtext = str_getlast(text, suffix_edit_newtab.length).str; //切除
+	} else if (str_chklast(text, suffix_edit)) { //当前标签编辑
 		edit_type.isedit = true; //设置标记
-		edit_type.newtext = str_getlast(text, perfix_edit.length).str; //返回剩余的一部分
-	} else if (str_chklast(text, perfix_edit_newtab_oldway)) { //新标签编辑，老方式
+		edit_type.newtext = str_getlast(text, suffix_edit.length).str; //返回剩余的一部分
+	} else if (str_chklast(text, suffix_edit_newtab_oldway)) { //新标签编辑，老方式
 		edit_type.isedit = true; //编辑模式
 		edit_type.isnew = true; //单独的标记
-		edit_type.newtext = str_getlast(text, perfix_edit_newtab_oldway.length).str; //切除
-	} else if (str_chklast(text, perfix_search)) { //搜索内容
+		edit_type.newtext = str_getlast(text, suffix_edit_newtab_oldway.length).str; //切除
+	} else if (str_chklast(text, suffix_search)) { //搜索内容
+		//todo:兼并联合，不需要两次
 		edit_type.isfind = true; //单独的标记
 		//切割获得次数
-		edit_type.Srpages = str_getlastbytimes(text, perfix_search).times; //获得需要的页数，最小是1
-		edit_type.newtext = str_getlastbytimes(text, perfix_search).str; //切除次数外的
-	} else if (str_chklast(text, perfix_search_ime)) { //全角搜索内容
+		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
+	} else if (str_chklast(text, suffix_search_ime)) { //全角搜索内容
 		edit_type.isfind = true; //单独的标记
 		//切割获得次数
-		edit_type.Srpages = str_getlastbytimes(text, perfix_search_ime).times; //获得需要的页数，最小是1
-		edit_type.newtext = str_getlastbytimes(text, perfix_search_ime).str; //切除次数外的
-	} else if (str_chklast(text, perfix_search_fulltext)) { //仅搜索内容
+		edit_type.Srpages = str_getlastbytimes(text, suffix_search_ime).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, suffix_search_ime).str; //切除次数外的
+	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
 		edit_type.isfind = true; //寻找模式
 		edit_type.onlytxt = true; //紧紧全文
-		edit_type.newtext = str_getlast(text, perfix_search_fulltext.length).str; //切除
+		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
+	}else if (str_chklast(text, trim_edit_watchlist)) //监视列表在这里
+	{
+		//如果是"[ w]作为开头
+		if ()
+		{
+			str_chklast(text, trim_edit_watchlist)
+		}
 	}
 
 	return edit_type; //返回构建
@@ -219,8 +229,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
-	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&gcllimit=10&srsearch=" + encodeURIComponent(text);
+	req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
+	req_url += "&srnamespace=0%7C12"; //支持主要命名空间、帮助命名空间
 	if (pages > 2) { //第二页开始切换
 		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
 	}
@@ -489,6 +500,18 @@ function slboat_getrecently(callback) {
 	});
 }
 
+/* 获得监视列表
+ * 默认进入监视列表查看页
+ * 下面就是更多的玩意
+ */
+
+function slboat_getwatchlist(callback) {
+	//* 访问url，默认获取6个，看起来足够了
+	req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"
+	
+
+}
+
 /* 去除一切提醒的玩意 */
 
 function resetDefaultSuggestion() {
@@ -668,17 +691,17 @@ function get_help(callback) {
 	//编辑模式
 	results.push({
 		content: "编辑模式.?", //更细致的？哦不。。
-		description: "<dim>编辑模式</dim>    <url>[(见识标题)" + perfix_edit + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + perfix_edit_newtab + "],[(见识标题)" + perfix_edit_newtab_oldway + "]</url>:附近窗口编辑 "
+		description: "<dim>编辑模式</dim>    <url>[(见识标题)" + suffix_edit + "]</url>:当前窗口编辑\t   \t<url>[(见识标题)" + suffix_edit_newtab + "],[(见识标题)" + suffix_edit_newtab_oldway + "]</url>:附近窗口编辑 "
 	});
 	//搜索模式
 	results.push({
 		content: "搜索模式.?", //更细致的？哦不。。
-		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + perfix_search + "]、全角[" + perfix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + perfix_search_fulltext + "]</url>:仅仅搜索见识正文"
+		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + suffix_search + "]、全角[" + suffix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + suffix_search_fulltext + "]</url>:仅仅搜索见识正文"
 	});
 	//搜索模式
 	results.push({
 		content: "别的玩意.?", //更细致的？哦不。。
-		description: "<dim>别的玩意</dim>    <url>[(见识标题)" + perfix_copy + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + perfix_help + "]</url>:提供本帮助信息而已"
+		description: "<dim>别的玩意</dim>    <url>[(见识标题)" + suffix_copy + "]</url>:复制见识标题\t   \t<url>[(见识标题)" + suffix_help + "]</url>:提供本帮助信息而已"
 	});
 	//去往主页
 	results.push({
