@@ -4,7 +4,7 @@ var freeze_flag = false; //冻结更新
 
 /* 调试配置 */
 isdebug = false; //网络调试
-isdebug_fonts_fix = true; //字体调试
+isdebug_fonts_fix = false; //字体调试
 
 /* 工厂声明 */
 var fonts_fix;
