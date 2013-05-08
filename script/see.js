@@ -26,6 +26,7 @@ var suffix_search_ime = "。"; //输入法生成的全角也认
 var suffix_search_fulltext = "-"; //仅搜索全部文本
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
 var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
+var prefix_edit_watchlist_raw = "=wr"; //原始格式的监视列表
 
 /* 其他配置，将来可设置 */
 var need_more = true; //需要更多信息，用来过滤更多信息
@@ -45,7 +46,8 @@ function edit_chk(text) { //检查编辑模式
 		iscopy: false, //需要复制
 		ishelp: false, //需要帮助
 		Srpages: 1, //页数1，第一页开始
-		iswatch: false //最近的监视列表
+		iswatch: false, //最近的监视列表
+		iswatchraw: false //原始raw列表
 	}; //返回构造
 
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
@@ -80,8 +82,12 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.isfind = true; //寻找模式
 		edit_type.onlytxt = true; //紧紧全文
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
-	}else if (str_chkfirst(text, prefix_edit_watchlist)) //监视列表在这里
+	}else if (str_chkfirst(text, prefix_edit_watchlist) || str_chkfirst(text, prefix_edit_watchlist_raw)) //监视列表在这里
 	{
+		if (str_chkfirst(text, prefix_edit_watchlist_raw)) //需要原始列表
+		{
+			edit_type.iswatchraw = true; //原始raw列表
+		}
 		//如果是"[=w]作为开头
 		edit_type.iswatch = true;//监视列表
 		edit_type.newtext = str_getfirst(text, prefix_edit_watchlist.length).str
@@ -144,7 +150,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 		freeze(); //冻结显示栏
 	}else	if (edit_type.iswatch)//监视列表
 		{
-			slboat_getwatchlist(text,function(results){
+			slboat_getwatchlist(text,edit_type,function(results){
 				suggest(results);
 			}); //来一些最近的监视列表
 			return true; //完成工作
@@ -202,6 +208,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
+	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text); //构建基础请求的原型,就像个孩子
+	req_url += "&srnamespace=0%7C1%7C12"; //支持主要命名空间、帮助命名空间，以及主要的讨论空间
+
 	//超过一页，不搜索标题先了
 	if (pages > 1) {
 		search_text = true;
@@ -235,9 +244,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
-	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text);
 	req_url += "&srwhat=" + strwhat; //搜索类型
-	req_url += "&srnamespace=0%7C12"; //支持主要命名空间、帮助命名空间
 	if (pages > 2) { //第二页开始切换
 		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
 	}
@@ -511,9 +518,17 @@ function slboat_getrecently(callback) {
  * 下面就是更多的玩意
  */
 //todo: 下一页探索？
-function slboat_getwatchlist(text, callback) {
+function slboat_getwatchlist(text, edit_type, callback) {
 	//* 访问url，默认获取6个，看起来足够了
-	var req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
+	var req_url;
+	if (edit_type.iswatchraw) //raw模式
+	{
+		req_url = site_url +"/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
+		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198"; //屏蔽所有讨论命名空间，暂时的不需要它
+	}else{
+		req_url = site_url +"/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
+	}
+	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	perfix_tips="";
 	if (text.length>0)
 	{
@@ -523,8 +538,25 @@ function slboat_getwatchlist(text, callback) {
 	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>"+perfix_tips); //提醒文字
 	currentRequest = get_json(req_url, function (data) {
 		var results = [];
-		//todo:处理无效的情况，待错误信息出现吧
-		var result_arry = data.query.watchlist; //返回的数组，长度0就是没有结果
+		var result_arry; //结果字串
+
+		if (!data.query && !data.watchlistraw)
+		{
+			var error_info = "";
+			if (!data.error)
+			{
+				error_info = "我也不太清楚发生啥事了!";
+			}else{
+				error_info = printf("我想可能是因为: %s", [data.error.info]); //获得了错误信息
+			}
+			put_info(printf("探索<url>监视列表</url>的时候发生意外 %s",[error_info])); //印出错误信息
+			return false; //再见离开
+		}
+		if (edit_type.iswatchraw) //raw模式
+			result_arry = data.watchlistraw; //返回的数组，长度0就是没有结果	
+		else{
+			result_arry = data.query.watchlist; //返回的数组，长度0就是没有结果
+		}
 		if (typeof (result_arry) == "undefined") {
 			return false; //无效退出
 		}
@@ -659,8 +691,14 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 	if (edit_type.isnew) { //一起+那就放回去
 		tab_new(edit_link + chk_redict(text)); //处理重定向
 
-	} else if (edit_type.isedit) {
+	} else if (edit_type.isedit) { //编辑模式
 		tab_go(edit_link + chk_redict(text));
+
+	} else if (edit_type.iswatch) //监视列表
+	{
+		var watch_url = site_url + "/w/index.php?title=Special:Watchlist"; //用户的监视列表标记
+		watch_url += "&days=0"; //没有限制日期
+		tab_go(watch_url);
 
 	} else {
 		//正常情况下，当一样的时候让它自己跳转

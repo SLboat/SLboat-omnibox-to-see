@@ -222,6 +222,7 @@ function log(info, date) {
 	}
 	return true;
 }
+
 /* 复制文本到剪贴板里这样送出去咯 */
 
 function copy_text(text) {
@@ -233,13 +234,20 @@ function copy_text(text) {
 	return rv; //返回这玩意的执行
 }
 
+/* 得到一个看起来随机的大数字
+ * 主要用来XHR啥子的
+ */
+ function getatime(){
+    return "?atime=" + new Date().getTime();//获取当前时间作为随机数
+ }
+
 /* 这是改变自Lupin所制造的一种打印字符
  * 这样使用它，str为原始串(%s代表标记),subs为一个匹配数组
  * 如果是单项，不需要数组，这里会转换
  * 如果多项，必须数组，否则只转换第一项
  * 实现部分，前者是字符串，使用%s作为匹配，后者是匹配组们 
  * 一个使用就像是：printf("hello%s,why %s is here",["you","me"])
- * todo，增加五个附加值，避免每次要数组
+ * todo，增加五个附加值，避免每次要数组，事实上需要的参数并不太多
  */
 
 function printf(str, subs) {
