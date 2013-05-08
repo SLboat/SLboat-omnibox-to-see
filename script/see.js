@@ -105,7 +105,7 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	text = edit_type.newtext; //文字也处理了
 	if (edit_type.ishelp) { //一些帮助{
 		get_help(function (results) {
-			suggest(results); //回调输出			
+			send_suggest(results); //回调输出			
 		});
 		return true; //离开
 	}
