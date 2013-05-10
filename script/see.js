@@ -682,7 +682,7 @@ function tab_new(url) {
  * 将：去往那个见识的地方
  */
 chrome.omnibox.onInputEntered.addListener(function (text) {
-	var tips_title = "航海见识探索/探索提醒";
+	var tips_title = "OminiboxSee"; //修改为英文的哪种简单标题
 	var edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
