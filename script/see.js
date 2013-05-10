@@ -347,7 +347,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 					put_info("已探索到<url>[.c]</url>是个完全匹配的见识,已经将处理后的<url>" + make_copy_text + "</url>送到剪贴板...");
 					freeze(); //继续冻结
 				} else {
-					put_info("噢!太好了!探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
+					put_info("噢!<url>太好了!</url>探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
 
 				normal_list.push(text, title_get); //送入规格化信息
