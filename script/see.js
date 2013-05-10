@@ -459,6 +459,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			show_info += "</dim>"; //匹配结束
 			if (title_get == text) { //完全一样会不显示
 				title_get += "_"; //加一个无关紧要的进去
+                show_info += "\t \t <url>完全一样的见识!</url>";
 			}
 			/* 构建最终返回字串 */
 			results.push({
