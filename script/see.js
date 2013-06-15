@@ -11,10 +11,10 @@ var fonts_fix;
 var redict_list
 
 /* 常规性配置
- * 可以量化为object？
- */
- //todo: 支持array方式？多种匹配？或许是支持|分割模式，在字符串处理的时候进行匹配！
- //          或者就["+",".c"]，这样好了:)，单个的时候也支持就像printf
+* 可以量化为object？
+*/
+//todo: 支持array方式？多种匹配？或许是支持|分割模式，在字符串处理的时候进行匹配！
+//          或者就["+",".c"]，这样好了:)，单个的时候也支持就像printf
 var suffix_copy = ".c"; //从标题复制文本
 var suffix_help = ".?"; //提供帮助信息
 var suffix_edit = "+"; //前缀编辑模式
@@ -22,7 +22,7 @@ var suffix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
 var suffix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
-var suffix_search_ime = "。"; //输入法生成的全角也认
+var suffix_search_ime = "。"; //输入法生成的全角也认，不再需要准备移除
 var suffix_search_fulltext = "-"; //仅搜索全部文本
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
 var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
@@ -32,9 +32,9 @@ var prefix_edit_watchlist_raw = "=wr"; //原始格式的监视列表
 var need_more = true; //需要更多信息，用来过滤更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
- * 返回构建：
- * isedit:是否编辑，isnew:是否新建，newtext:过滤后的文字
- */
+* 返回构建：
+* isedit:是否编辑，isnew:是否新建，newtext:过滤后的文字
+*/
 
 function edit_chk(text) { //检查编辑模式
 	var edit_type = {
@@ -49,6 +49,9 @@ function edit_chk(text) { //检查编辑模式
 		iswatch: false, //最近的监视列表
 		iswatchraw: false //原始raw列表
 	}; //返回构造
+	
+	//全局替换句号为点号，或许只处理最后几个字符就好了？
+	text=text.replace("。", ".");
 
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
@@ -97,9 +100,9 @@ function edit_chk(text) { //检查编辑模式
 }
 
 /* 输入变动 
- * 这是一切工作的核心
- * todo：拆散化，建立子函数们一起工作
- */
+* 这是一切工作的核心
+* todo：拆散化，建立子函数们一起工作
+*/
 chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 	var str_new_win = "进入<url>当前海域</url>"; //新窗口的玩意？
 	var edit_type; //编辑模式的玩意
@@ -149,11 +152,11 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 		}
 		freeze(); //冻结显示栏
 	}else	if (edit_type.iswatch)//监视列表
-		{
-			slboat_getwatchlist(text,edit_type,function(results){
-				suggest(results);
-			}); //来一些最近的监视列表
-			return true; //完成工作
+	{
+		slboat_getwatchlist(text,edit_type,function(results){
+			suggest(results);
+		}); //来一些最近的监视列表
+		return true; //完成工作
 	}
 
 	//todo：直接放入到别的地方，或者封装到edit_type里
@@ -196,12 +199,12 @@ chrome.omnibox.onInputChanged.addListener(function (text, send_suggest) {
 });
 
 /* 获得全文搜索建议
- * 传入原始字串，只搜索标题，上次的结果-递归
- * 回调搜索建议
- * 它将会很酷
- * todo:如果错误，尝试丢回上一次信息
- * todo:清理掉search_text，这个落后的玩意
- */
+* 传入原始字串，只搜索标题，上次的结果-递归
+* 回调搜索建议
+* 它将会很酷
+* todo:如果错误，尝试丢回上一次信息
+* todo:清理掉search_text，这个落后的玩意
+*/
 
 function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
@@ -270,7 +273,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 					normal_list.push(text, title_get); //送入规格化信息
 					diff_info = "<dim>我没看错的话!它们是完全一样的!</dim>"
 				} else
-					diff_info = "<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>";
+				diff_info = "<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>";
 			}
 			var desc_title = title_get;
 			if (edit_type.isfind)
@@ -309,11 +312,11 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 }
 
 /* 获得标题匹配见识
- * 传入原始字串，标题特征，回调函数
- * 回调建议结果，标题序列
- * 最基础的变动匹配
- * 它可能会很长
- */
+* 传入原始字串，标题特征，回调函数
+* 回调建议结果，标题序列
+* 最基础的变动匹配
+* 它可能会很长
+*/
 
 function get_suggest(text, edit_type, str_new_win, callback) {
 	//处理增加模式
@@ -365,9 +368,9 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 }
 
 /* 获得进一步信息，更进一步 
- * 传入键入字符，新窗口标记，编辑类型（用于标记重定向），初步获得见识信息，原始标题序列，回调结果函数
- * 回调输出结果-标准格式
- */
+* 传入键入字符，新窗口标记，编辑类型（用于标记重定向），初步获得见识信息，原始标题序列，回调结果函数
+* 回调输出结果-标准格式
+*/
 
 function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
 	//todo: 增加提醒信息？堆栈保存上次的，然后再恢复？
@@ -459,7 +462,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 			show_info += "</dim>"; //匹配结束
 			if (title_get == text) { //完全一样会不显示
 				title_get += "_"; //加一个无关紧要的进去
-                show_info += "\t \t <url>完全一样的见识!</url>";
+				show_info += "\t \t <url>完全一样的见识!</url>";
 			}
 			/* 构建最终返回字串 */
 			results.push({
@@ -483,8 +486,8 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 }
 
 /* 获得最近的见识 
- * 给予需要的，获得想要的
- */
+* 给予需要的，获得想要的
+*/
 
 function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
@@ -515,9 +518,9 @@ function slboat_getrecently(callback) {
 }
 
 /* 获得监视列表
- * 默认进入监视列表查看页
- * 下面就是更多的玩意
- */
+* 默认进入监视列表查看页
+* 下面就是更多的玩意
+*/
 //todo: 下一页探索？
 function slboat_getwatchlist(text, edit_type, callback) {
 	//* 访问url，默认获取6个，看起来足够了
@@ -554,7 +557,7 @@ function slboat_getwatchlist(text, edit_type, callback) {
 			return false; //再见离开
 		}
 		if (edit_type.iswatchraw) //raw模式
-			result_arry = data.watchlistraw; //返回的数组，长度0就是没有结果	
+		result_arry = data.watchlistraw; //返回的数组，长度0就是没有结果	
 		else{
 			result_arry = data.query.watchlist; //返回的数组，长度0就是没有结果
 		}
@@ -589,9 +592,9 @@ function resetDefaultSuggestion() {
 }
 
 /* 释放到提醒栏
- * 如果需要输入内容，那就输入%s
- * 全局标记冻结freeze_flag开启的话，不会更新
- */
+* 如果需要输入内容，那就输入%s
+* 全局标记冻结freeze_flag开启的话，不会更新
+*/
 
 function put_info(text) {
 	if (freeze_flag) {
@@ -622,9 +625,9 @@ function put_error(e) {
 }
 
 /* 获得json搜索结果 
- * 传入寻找地址，回调函数
- * todo：增加一个onerror处理事件，用来比如不能获得进一步信息
- */
+* 传入寻找地址，回调函数
+* todo：增加一个onerror处理事件，用来比如不能获得进一步信息
+*/
 
 function get_json(req_url, callback, onerror) {
 	var req = new XMLHttpRequest();
@@ -652,8 +655,8 @@ function get_json(req_url, callback, onerror) {
 }
 
 /* 前往海域-当前海域
- * 实际上只要tab.id看起来就够了
- */
+* 实际上只要tab.id看起来就够了
+*/
 
 function tab_go(url) {
 	if (isdebug) {
@@ -668,7 +671,7 @@ function tab_go(url) {
 }
 
 /* 前往海域-附近海域 
- */
+*/
 
 function tab_new(url) {
 	chrome.tabs.getSelected(null, function (tab) { //这就是获得了当前的tab哦
@@ -680,14 +683,14 @@ function tab_new(url) {
 }
 
 /* 当：选择了一项见识里的玩意
- * 将：去往那个见识的地方
- */
+* 将：去往那个见识的地方
+*/
 chrome.omnibox.onInputEntered.addListener(function (text) {
 	var tips_title = "OminiboxSee"; //修改为英文的哪种简单标题
 	var edit_type = edit_chk(text); //检查类型
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
-		encodeURIComponent(tips_title) + "&title="
+	encodeURIComponent(tips_title) + "&title="
 	//处理新窗口
 	if (edit_type.isnew) { //一起+那就放回去
 		tab_new(edit_link + chk_redict(text)); //处理重定向
@@ -708,8 +711,8 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 });
 
 /* 获得当前的tab，留待使用
- * 它可以获得，而且看起来并不是很疯狂
- */
+* 它可以获得，而且看起来并不是很疯狂
+*/
 
 function tab_getnow() {
 	chrome.tabs.getSelected(function (tab) {
@@ -719,17 +722,17 @@ function tab_getnow() {
 }
 
 /* 判断是否是一些东西
- * 而不是未定义-undefined
- * todo：字符串加上自动判断""?
- */
+* 而不是未定义-undefined
+* todo：字符串加上自动判断""?
+*/
 
 function issth(anything) {
 	return typeof (anything) != "undefined";
 }
 
 /* 处理重定向信息 
- * 返回处理后的重定向信息
- */
+* 返回处理后的重定向信息
+*/
 
 function chk_redict(text) {
 	//正常化，再重定向
@@ -750,8 +753,8 @@ function defreeze() {
 }
 
 /* 最无用的家伙
- * 显示一些帮助
- */
+* 显示一些帮助
+*/
 
 function get_help(callback) {
 	//可能不是及时更新，切当看看
