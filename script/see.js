@@ -241,8 +241,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		prefix = "内容入口处<url>(不探索标题)</url>...";
 		page_info = printf("当前探索到%s", prefix);
 	} else {
-		page_info = "当前探索到第" + pages + "页";
-		prefix = "深入的<url>第" + pages + "页</url>...";
+		//页数减少一，这里的页数真是太混乱了
+		page_info = "当前探索到第" + (pages-1) + "页";
+		prefix = "深入的<url>第" + (pages-1) + "页</url>...";
 	}
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
