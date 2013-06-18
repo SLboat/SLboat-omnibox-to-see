@@ -51,7 +51,7 @@ function edit_chk(text) { //检查编辑模式
 	}; //返回构造
 	
 	//全局替换句号为点号，或许只处理最后几个字符就好了？
-	text=text.replace("。", ".");
+	text=text.replace(/。/g, ".");
 
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
@@ -249,7 +249,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
 	if (pages > 2) { //第二页开始切换
-		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
+		req_url += "&sroffset=" + (pages-2) * 5; //搜索页数，每页五项
 	}
 	//开始呼叫
 	currentRequest = get_json(req_url, function (data) { //处理返回的json如何处置
@@ -773,7 +773,7 @@ function get_help(callback) {
 	//搜索模式
 	results.push({
 		content: "搜索模式.?", //更细致的？哦不。。
-		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + suffix_search + "]、全角[" + suffix_search_ime + "]</url>:从标题搜向文本\t   \t<url>[(见识标题)" + suffix_search_fulltext + "]</url>:仅仅搜索见识正文"
+		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + suffix_search + "]</url>:从标题搜向文本,兼容全角\t   \t<url>[(见识标题)" + suffix_search_fulltext + "]</url>:仅仅搜索见识正文"
 	});
 	//搜索模式
 	results.push({
