@@ -258,7 +258,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		if (data["query-continue"] !== undefined) //拥有下一页的玩意
 		{
 			has_next_page = true; //还有更多页
-			page_info += printf(",探索到还有<dim>[第%s页]</dim>", (pages + 1));
+			page_info += printf(",探索到还有<dim>[第%s页]</dim>", (pages));
 		}
 		var search_result = data.query.search; //返回结果
 		//开始释放结果
