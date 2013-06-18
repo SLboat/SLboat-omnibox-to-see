@@ -248,7 +248,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
-	if (pages > 2) { //第二页开始切换
+	if (pages > 1) { //第二页开始切换
 		req_url += "&sroffset=" + pages * 5; //搜索页数，每页五项
 	}
 	//开始呼叫
