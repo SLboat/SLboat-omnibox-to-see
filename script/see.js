@@ -295,7 +295,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 			if (results.length == 0) //没有任何结果
 			{
-				put_info(printf("%s探索不到更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
+				put_info(printf("%s<url>探索不到</url>更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
 
 				results.push({
 					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
