@@ -693,7 +693,8 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		encodeURIComponent(tips_title) + "&title="
 	//处理新窗口
 	if (edit_type.islast){
-		tab_new(site_url + "/wiki/特殊:最近更改") //进入最近更改
+		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
+
 	} else if (edit_type.isnew) { //一起+那就放回去
 		tab_new(edit_link + chk_redict(text)); //处理重定向
 
