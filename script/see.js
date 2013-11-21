@@ -191,7 +191,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 				} else {
 					suggest(results)
 				}; //传回建议的内容
-			});
+			}, false, []);
 		}
 	} else { //直接现实最近的
 		//todo: [last]也支持如何
@@ -326,18 +326,25 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
  * 它可能会很长
  */
 
-function get_suggest(text, edit_type, str_new_win, callback) {
+function get_suggest(text, edit_type, str_new_win, callback, do_for_think, results) {
 	/* 名字空间的定义	
 	 */
-	var name_space_need = "&namespace=0"; //目前还不工作!
+	do_for_think = do_for_think || false; //为想法做一次
+	var results = results || [];
+	var name_space_need = "&namespace="; //目前还不工作!
+	if (do_for_think) {
+		name_space_need += "666"; //666,想法...
+	} else {
+		name_space_need += "0"; //普通空间
+	};
 	var LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
 	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
-		var results = [];
+		//这是内部的闭包,会吸收外面的环境
 		//用于一个本地的保留备份
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
-		if (result_arry.length == 0) {
+		if (!do_for_think && result_arry.length == 0 && results.length == 0) { //啥也没有的话
 			//切换到别的方式去
 			if (!edit_type.isedit) {
 				put_info(printf("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>[%s]</url>的玩意:", text));
@@ -347,7 +354,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 			return true; //退出，将失去一切
 		}
 		//这是每一个结果的处置
-		for (var index = 0; index < result_arry.length; index++) { //处理第一项
+		for (var index = 0; index < result_arry.length && results.length < 5; index++) { //处理第一项
 			var title_get = result_arry[index]; //处理这个玩意
 			if (str_is_about_same(title_get, LOOK_FOR_TEXT)) //完全匹配-除了大概一样
 			{
@@ -364,6 +371,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 					put_info("噢!<url>太好了!</url>探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
 
+				/* 暂存给进一步信息 */
 				normal_list.push(LOOK_FOR_TEXT, title_get); //送入规格化信息
 			}
 			var match_str = ominibox_get_highline(title_get, LOOK_FOR_TEXT);
@@ -373,8 +381,13 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 				description: match_str + "\t       <dim>->存在于在航海见识, 但无法更深入探索</dim>" //这是描述
 			});
 		}
-		//返回原始标题，以及结果
-		callback(results, result_arry); //或许还要点别的？	
+		if (do_for_think || result_arry.length > 4) { //不止有四个,那就当掉全部的
+			//返回原始标题，以及结果
+			callback(results, result_arry); //或许还要点别的？	
+		} else { //回调自己,再做一次
+			/* result 结果还会在吗?-这不是回调,不会存在的 */
+			get_suggest(text, edit_type, str_new_win, callback, true, results);
+		};
 	}); //完成任务
 }
 
@@ -504,7 +517,7 @@ function slboat_getrecently(callback) {
 	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
 	//todo，函数式改写，太有点混世了
 	//仅获得6个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0&rclimit=6&rctype=edit%7Cnew";
+	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0%7C8%7C12%7C14%7C666&rclimit=6&rctype=edit%7Cnew";
 	//获得最后一次操作，可能丢失最新的，暂时关闭
 	req_url += "&rctoponly";
 	//如何移出去呢
@@ -540,7 +553,7 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	if (edit_type.iswatchraw) //raw模式
 	{
 		req_url = site_url + "/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
-		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198"; //屏蔽所有讨论命名空间，暂时的不需要它
+		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666	"; //屏蔽所有讨论命名空间，暂时的不需要它
 	} else {
 		req_url = site_url + "/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
 	}
