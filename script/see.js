@@ -90,9 +90,13 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.Srpages = str_getlastbytimes(text, suffix_search_ime).times; //获得需要的页数，最小是1
 		edit_type.newtext = str_getlastbytimes(text, suffix_search_ime).str; //切除次数外的
 	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
-		edit_type.isfind = true; //寻找模式
-		edit_type.onlytxt = true; //紧紧全文
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
+		if (edit_type.newtext.length == 0) { //如果什么内容也没有,那何必全部检索..?
+			edit_type.islast = true
+		} else {
+			edit_type.isfind = true; //寻找模式
+			edit_type.onlytxt = true; //紧紧全文		
+		}
 	} else if (str_chkfirst(text, prefix_edit_watchlist) || str_chkfirst(text, prefix_edit_watchlist_raw)) //监视列表在这里
 	{
 		if (str_chkfirst(text, prefix_edit_watchlist_raw)) //需要原始列表
@@ -173,6 +177,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		str_new_win = "进入<url>最近的海域</url>";
 	}
 	if (edit_type.isedit) {
+		//默认标记...
 		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
 
@@ -265,12 +270,16 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	}
 	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
 	//开始呼叫
-	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
+	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置		
 		log("搜索得到了", data);
+		if (data.error) { //出错了
+			put_info(printf("船长!收到错误报告: %s - %s", [data.error.code, data.error.info]));
+			return false; //死咯
+		};
 		if (data["query-continue"] !== undefined) //拥有下一页的玩意
 		{
 			has_next_page = true; //还有更多页
-			page_info += printf(",探索到还有<dim>[第%s页]</dim>", (pages));
+			page_info += printf(",探索到还有<dim>[第%s页]</dim>", pages);
 		}
 		var search_result = data.query.search; //返回结果
 		//开始释放结果

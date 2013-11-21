@@ -157,10 +157,10 @@ function slboat_get_match(snippet) {
 function ominibox_ecsape_xmlstr(results) {
 	//开始检阅xml字符
 	for (one in results) {
-		if (results[one].description.search("&") > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
+		if (results[one].description.search(/&/) > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
 		{
-			//这家伙有问题，开始处置程序
-			results[one].description = results[one].description.replace("&", "&amp;")
+			//这家伙有问题,开始处置程序,而且是全部替换
+			results[one].description = results[one].description.replace(/&/g, "&amp;")
 		}
 	}
 	//送回去所有检阅完毕的人们
