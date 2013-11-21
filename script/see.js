@@ -83,13 +83,13 @@ function edit_chk(text) { //检查编辑模式
 		//切割获得次数
 		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
 		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
-		if (edit_type.newtext.length == 0){
+		if (edit_type.newtext.length == 0) {
 			edit_type.islast = true; //空空的...
 		}
 	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
 		if (edit_type.newtext.length == 0) { //如果什么内容也没有,那何必全部检索..?
-			edit_type.islast = true
+			edit_type.islast = true;
 		} else { //或许不该吞掉..
 			edit_type.isfind = true; //寻找模式
 			edit_type.onlytxt = true; //紧紧全文		
@@ -128,7 +128,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 	/* 重新封装一个可靠的传回去的回传函数 */
 	var suggest = function(results) {
 		//处理寻找模式不需要
-		if (!edit_type.isfind) {
+		if (!edit_type.isfind || edit_type.islast) {
 			fonts_fix_load(); //载入字体设置-如果修改了
 			if (fonts_fix.iswork) //如果在工作的话
 			{
@@ -203,7 +203,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		}
 	} else { //直接现实最近的
 		//todo: [last]也支持如何
-		slboat_getrecently(function(results) {
+		slboat_getrecently(edit_type, function(results) {
 			suggest(results); //闭包回来处理
 		});
 	} //最终结束
@@ -533,14 +533,29 @@ function get_more_info(text, edit_type, str_new_win, faild_results, callback) {
  * 给予需要的，获得想要的
  */
 
-function slboat_getrecently(callback) {
-	put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
+function slboat_getrecently(edit_type, callback) {
 	//todo，函数式改写，太有点混世了
-	//仅获得6个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rcnamespace=0%7C8%7C12%7C14%7C666&rclimit=6&rctype=edit%7Cnew";
-	//获得最后一次操作，可能丢失最新的，暂时关闭
-	req_url += "&rctoponly";
-	//如何移出去呢
+	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rctype=edit%7Cnew";
+	//获得最后一次操作，可能丢失最新的
+	req_url += "&rctoponly"; //重复的话只要一个
+	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES; //名字空间
+	/* 处理翻页的玩意们 */
+	var st_look = 0; //开始寻找的个数
+	if (edit_type.isfind) { //如果是翻页模式...
+		st_look = (edit_type.Srpages - 1) * 5; //根据着页来探索...
+	};
+	if (edit_type.isfind) { //如果是需要多页的玩意...
+		put_info(printf("正在深入探索<url>[最近]</url>见识,这是[%s]页(%s-%s):", [edit_type.Srpages, st_look, st_look + 5]));
+		//需要的页数x5
+		limit_need = edit_type.Srpages * 5;
+	} else {
+		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
+		limit_need = 5; //默认就要五个好了
+	};
+	//仅获得多少个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
+	req_url += "&rclimit=" + limit_need; //需要几个结果,将来截取
+
+	//如何移出去呢->也许在这里就很好了嘛
 	currentRequest = get_json(req_url, function(data) {
 		var results = [];
 		//todo：不要一次性算出两级，错误太多
@@ -549,12 +564,12 @@ function slboat_getrecently(callback) {
 			return false; //无效退出
 		}
 		//这是每一个结果的处置
-		for (var index = 0; index < result_arry.length; index++) { //处理第一项
+		for (var index = st_look; index < st_look + 5; index++) { //只提取5个
 			var title_get = result_arry[index].title //处理这个玩意
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: title_get + "\t       <dim>->最近的见识</dim><url>[" + index + "]</url>" //这是描述
+				description: printf("%s\t       <dim>->最近的见识</dim><url>[%s]</url>", [title_get, index]) //这是描述
 			});
 		}
 		callback(results); //提交结果，完事
@@ -573,7 +588,7 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	if (edit_type.iswatchraw) //raw模式
 	{
 		req_url = site_url + "/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
-		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666	"; //屏蔽所有讨论命名空间，暂时的不需要它
+		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
 	} else {
 		req_url = site_url + "/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
 	}
