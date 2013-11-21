@@ -2,6 +2,11 @@ var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com"; //请求站点
 var freeze_flag = false; //冻结更新
 
+/* 命名空间支持 
+ * 支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
+ */
+var WORK_FOR_NAMESPACES = "0%7C1%7C12%7C666";
+
 /* 调试配置 */
 isdebug = false; //网络调试
 isdebug_fonts_fix = false; //字体调试
@@ -182,16 +187,17 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 				suggest(results); //搜索建议释放
 			}, false); //非最后一次
 		} else { //非搜索模式
-			get_suggest(text, edit_type, str_new_win, function(results, org_data) { //原始数据为一个字串表
-				if (need_more && issth(org_data)) //需要更多信息，提醒应该换换，有得到原始字串
+			moreinfo_callback = function(results) { //原始数据为一个字串表
+				if (need_more && results.length > 0) //需要更多信息，提醒应该换换，有得到原始字串
 				{
-					get_more_info(text, edit_type, str_new_win, results, org_data, function(results) {
+					get_more_info(text, edit_type, str_new_win, results, function(results) {
 						suggest(results); //传回最终研究内容
 					}); //呼叫下一回合
 				} else {
 					suggest(results)
 				}; //传回建议的内容
-			}, false, []);
+			};
+			get_suggest(text, edit_type, str_new_win, moreinfo_callback, false, null);
 		}
 	} else { //直接现实最近的
 		//todo: [last]也支持如何
@@ -216,7 +222,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var has_next_page = false; //没有下一页
 	var LOOK_FOR_TEXT = text; //搜索内容
 	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
-	req_url += "&srnamespace=0%7C1%7C12%7C666"; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
+	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //工作的命名空间
 
 	//超过一页，不搜索标题先了
 	if (pages > 1) {
@@ -338,7 +344,9 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 		name_space_need += "0"; //普通空间
 	};
 	var LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
-	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
+	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
+	req_url += name_space_need; //加上名字空间
+
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
 		//这是内部的闭包,会吸收外面的环境
@@ -383,7 +391,7 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 		}
 		if (do_for_think || result_arry.length > 4) { //不止有四个,那就当掉全部的
 			//返回原始标题，以及结果
-			callback(results, result_arry); //或许还要点别的？	
+			callback(results); //或许还要点别的？	
 		} else { //回调自己,再做一次
 			/* result 结果还会在吗?-这不是回调,不会存在的 */
 			get_suggest(text, edit_type, str_new_win, callback, true, results);
@@ -396,12 +404,18 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
  * 回调输出结果-标准格式
  */
 
-function get_more_info(text, edit_type, str_new_win, faild_results, result_arry, callback) {
+function get_more_info(text, edit_type, str_new_win, faild_results, callback) {
 	//todo: 增加提醒信息？堆栈保存上次的，然后再恢复？
 	//等待更深一步探索
 	var has_same_title = false; //有完全匹配标题的项目
+	var result_arry = []; //重建结果数组
+	faild_results.forEach(function(resust) {
+		result_arry.push(resust.content); //推入...
+	});
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=5&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
+	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
+
 	var onfaild = function(e) //如果发生了错误
 	{
 		put_info("更深入探索见识的时候发生了些意外: [" + e.message + "], 这是初步探索");
