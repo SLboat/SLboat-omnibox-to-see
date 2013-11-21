@@ -83,6 +83,9 @@ function edit_chk(text) { //检查编辑模式
 		//切割获得次数
 		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
 		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
+		if (edit_type.newtext.length == 0){
+			edit_type.islast = true; //空空的...
+		}
 	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
 		if (edit_type.newtext.length == 0) { //如果什么内容也没有,那何必全部检索..?
