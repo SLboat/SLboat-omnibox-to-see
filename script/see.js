@@ -352,7 +352,7 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 		//这是内部的闭包,会吸收外面的环境
 		//用于一个本地的保留备份
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
-		if (!do_for_think && result_arry.length == 0 && results.length == 0) { //啥也没有的话
+		if (do_for_think && result_arry.length == 0 && results.length == 0) { //啥也没有的话
 			//切换到别的方式去
 			if (!edit_type.isedit) {
 				put_info(printf("普通探索失败,下面是我以<url>深入的方式</url>探索出来有关<url>[%s]</url>的玩意:", text));
