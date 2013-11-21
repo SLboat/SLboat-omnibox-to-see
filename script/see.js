@@ -136,7 +136,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			}
 		}
 		//处理掉干扰xml字串，看起来是最后的了
-		results = ominibox_ecsape_xmlstr(results);
+		results = ominibox_ecsape_xmlstr_results(results);
 		//传出结果
 		send_suggest(results);
 	}
@@ -283,7 +283,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		for (var index = 0; index < search_result.length; index++) //递归啊，建造啊
 		{
 			title_get = search_result[index].title; //标题好吗，模糊标题一样
-			diff_info = slboat_get_match(search_result[index].snippet); //匹配内容
+			diff_info = slboat_get_match(ecsape_all_xmlstr(search_result[index].snippet)); //匹配内容
 			if (diff_info.length < 1) //没有过多信息
 			{
 				//通常的它们会混在一起
@@ -539,6 +539,7 @@ function slboat_getrecently(edit_type, callback) {
 	//获得最后一次操作，可能丢失最新的
 	req_url += "&rctoponly"; //重复的话只要一个
 	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES; //名字空间
+	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
 	/* 处理翻页的玩意们 */
 	var st_look = 0; //开始寻找的个数
 	if (edit_type.isfind) { //如果是翻页模式...
@@ -565,11 +566,25 @@ function slboat_getrecently(edit_type, callback) {
 		}
 		//这是每一个结果的处置
 		for (var index = st_look; index < st_look + 5; index++) { //只提取5个
-			var title_get = result_arry[index].title //处理这个玩意
+			var title_get = result_arry[index].title; //标题
+			var type_str = result_arry[index].type; //类型			
+			var comment_str = result_arry[index].comment; //注释内容
+			if (comment_str.length > 0) { //前置点玩意
+				comment_str = ": " + ecsape_all_xmlstr(comment_str); //注释特殊字符
+			};
+			switch (type_str) { //重新命名编辑方式
+				case "new":
+					type_str = "新建";
+					break; //必须跳
+				case "edit":
+					type_str = "编辑";
+					break;
+					/* 别的方式就不变咯 */
+			}
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: printf("%s\t       <dim>->最近的见识</dim><url>[%s]</url>", [title_get, index]) //这是描述
+				description: printf("%s\t       <dim>->最近%s见识</dim><url>[%s]</url>%s", [title_get, type_str, index, comment_str]) //这是描述
 			});
 		}
 		callback(results); //提交结果，完事

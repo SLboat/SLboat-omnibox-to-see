@@ -148,19 +148,35 @@ function slboat_get_match(snippet) {
 	return snippet;
 }
 
+/* 替换所有的括号标记,注意这里不能用作结果的替换,只能作为结果获得值 */
+
+function ecsape_all_xmlstr(content) {
+	return content.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
+
+/* 只是简单的替换一个字符串 */
+
+function ominibox_ecsape_xmlstr(desc) {
+	return desc.replace(/&/g, "&amp;");
+}
+
 /* 地址栏的小玩意，逃脱xml字符
  * 由小约子发现的# Bug而来。
  *	传入完整的结果
  * 传回逃跑了xml字符的结果
  */
 
-function ominibox_ecsape_xmlstr(results) {
+function ominibox_ecsape_xmlstr_results(results) {
 	//开始检阅xml字符
 	for (one in results) {
 		if (results[one].description.search(/&/) > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
 		{
 			//这家伙有问题,开始处置程序,而且是全部替换
-			results[one].description = results[one].description.replace(/&/g, "&amp;")
+			results[one].description = ominibox_ecsape_xmlstr(results[one].description);
 		}
 	}
 	//送回去所有检阅完毕的人们
