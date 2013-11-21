@@ -214,7 +214,8 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
-	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text); //构建基础请求的原型,就像个孩子
+	var LOOK_FOR_TEXT = text; //搜索内容
+	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
 	req_url += "&srnamespace=0%7C1%7C12%7C666"; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
 
 	//超过一页，不搜索标题先了
@@ -234,6 +235,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
 	} else {
 		strwhat = "title"; //标题好的
+		LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
 
@@ -255,6 +257,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	if (pages > 2) { //第二页开始切换
 		req_url += "&sroffset=" + (pages - 2) * 5; //搜索页数，每页五项
 	}
+	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
 	//开始呼叫
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
 		log("搜索得到了", data);
@@ -326,16 +329,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 function get_suggest(text, edit_type, str_new_win, callback) {
 	/* 名字空间的定义	
 	 */
-	var name_space_need = "&namespace="; //目前还不工作!
-	var suggest_text = text; //临时寄存文本内容
-	var think_patern = /^想法[ ]/; //想法的匹配串
-	if (suggest_text.match(think_patern)) {
-		name_space_need += "0"; //永远只该执行一次
-		suggest_text = suggest_text.replace(think_patern, "想法:");
-	} else {
-		name_space_need += "0"; //永远只该执行一次
-	}
-	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(suggest_text); //构造字串
+	var name_space_need = "&namespace=0"; //目前还不工作!
+	var LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
+	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
 		var results = [];
@@ -353,7 +349,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//这是每一个结果的处置
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index]; //处理这个玩意
-			if (str_is_about_same(title_get, suggest_text)) //完全匹配-除了大概一样
+			if (str_is_about_same(title_get, LOOK_FOR_TEXT)) //完全匹配-除了大概一样
 			{
 				//一致提醒
 				if (edit_type.isedit) {
@@ -368,9 +364,9 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 					put_info("噢!<url>太好了!</url>探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
 
-				normal_list.push(suggest_text, title_get); //送入规格化信息
+				normal_list.push(LOOK_FOR_TEXT, title_get); //送入规格化信息
 			}
-			var match_str = ominibox_get_highline(title_get, suggest_text);
+			var match_str = ominibox_get_highline(title_get, LOOK_FOR_TEXT);
 			//push入数据，只是坏情况发生的时候
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的

@@ -126,6 +126,13 @@ function ominibox_get_highline_forall(title_get, text) {
 	return title_get;
 }
 
+/* 处理特别命名空间里的空格描述方式 */
+
+function slboat_namespace_tak(title) {
+	var ns_thinking = /^想法[ ]+/;
+	return title.replace(ns_thinking, "想法:"); //替换返回
+}
+
 /* 转换search返回的sniff的匹配字串
  * 输入原始的字串
  * 返回转换的字串
