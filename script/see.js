@@ -27,7 +27,6 @@ var suffix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
 var suffix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
-var suffix_search_ime = "。"; //输入法生成的全角也认，不再需要准备移除
 var suffix_search_fulltext = "-"; //仅搜索全部文本
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
 var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
@@ -84,16 +83,11 @@ function edit_chk(text) { //检查编辑模式
 		//切割获得次数
 		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
 		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
-	} else if (str_chklast(text, suffix_search_ime)) { //全角搜索内容
-		edit_type.isfind = true; //单独的标记
-		//切割获得次数
-		edit_type.Srpages = str_getlastbytimes(text, suffix_search_ime).times; //获得需要的页数，最小是1
-		edit_type.newtext = str_getlastbytimes(text, suffix_search_ime).str; //切除次数外的
 	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
 		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
 		if (edit_type.newtext.length == 0) { //如果什么内容也没有,那何必全部检索..?
 			edit_type.islast = true
-		} else {
+		} else { //或许不该吞掉..
 			edit_type.isfind = true; //寻找模式
 			edit_type.onlytxt = true; //紧紧全文		
 		}
