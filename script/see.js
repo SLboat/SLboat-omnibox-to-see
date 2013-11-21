@@ -215,7 +215,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
 	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(text); //构建基础请求的原型,就像个孩子
-	req_url += "&srnamespace=0%7C1%7C12"; //支持主要命名空间、帮助命名空间，以及主要的讨论空间
+	req_url += "&srnamespace=0%7C1%7C12%7C666"; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
 
 	//超过一页，不搜索标题先了
 	if (pages > 1) {
@@ -322,8 +322,10 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
  */
 
 function get_suggest(text, edit_type, str_new_win, callback) {
-	//处理增加模式
-	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(text); //构造字串
+	/* 名字空间的定义	
+	 */
+	var name_space_need = "&namespace=666|0"; //目前还不工作!
+	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(text); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
 		var results = [];
@@ -692,7 +694,7 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title="
 	//处理新窗口
-	if (edit_type.islast){
+	if (edit_type.islast) {
 		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
 
 	} else if (edit_type.isnew) { //一起+那就放回去
