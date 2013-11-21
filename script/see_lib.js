@@ -4,6 +4,7 @@
  * 返回: 布尔值，判决结果
  */
 //todo，last可为数组，进行连续匹配
+
 function str_chklast(text, last) {
 	//如果是正则表达式方式，从尾部匹配开始，计算是否有效匹配获得
 	if (last.length > 0) //有传入
@@ -19,8 +20,9 @@ function str_chklast(text, last) {
  * result.str: 切除尾巴后的字符
  */
 //todo: 根据文本数组来一个个匹配一个包含一致，并且给出切割后的
+
 function str_getlast(text, how_long) {
-	if (typeof (how_long) == "undefined") {
+	if (typeof(how_long) == "undefined") {
 		how_long = 1; //未指定赋予1
 	}
 	if (text.length > 0) {
@@ -56,7 +58,7 @@ function str_chkfirst(text, first) {
  */
 
 function str_getfirst(text, how_long) {
-	if (typeof (how_long) == "undefined") {
+	if (typeof(how_long) == "undefined") {
 		how_long = 1; //未指定赋予1
 	}
 	if (text.length > 0) {
@@ -111,6 +113,17 @@ function ominibox_get_highline(title_get, text) {
 	var match_part = title_get.match(text_re);
 	var match_str = title_get.replace(match_part, "<match>" + match_part + "</match>"); //高亮有的话，被处理了大小写
 	return match_str;
+}
+
+/* 高亮匹配所有内容-切除空格部分进行每一部分的匹配 */
+
+function ominibox_get_highline_forall(title_get, text) {
+	var split_arr = text.split(/ +/); //切割空格
+	for (var i = 0; i < split_arr.length; i++) {
+		/* 一直咬自己尾巴,直到没有尾巴,尾巴用空格做成 */
+		title_get = ominibox_get_highline(title_get, split_arr[i]);
+	};
+	return title_get;
 }
 
 /* 转换search返回的sniff的匹配字串
@@ -181,7 +194,7 @@ function ominibox_fix_desc(results) {
 	}
 	//调试字体信息
 	if (isdebug_fonts_fix) {
-		results.forEach(function (i, index, arr) {
+		results.forEach(function(i, index, arr) {
 			console.log(i.description.replace(/<\/?match>/g, "").replace(/<\/?dim>/g, ""))
 		})
 	}
@@ -215,7 +228,7 @@ function str_is_about_same(a, b) {
 
 function log(info, date) {
 	if (!isdebug) return false; //返回
-	if (typeof (date) == "undefined") {
+	if (typeof(date) == "undefined") {
 		console.log("调试信息：", info);
 	} else {
 		console.log("调试信息：", info, date);
@@ -237,15 +250,16 @@ function copy_text(text) {
 /* 得到一个看起来随机的大数字
  * 主要用来XHR啥子的
  */
- function getatime(){
-    return "?atime=" + new Date().getTime();//获取当前时间作为随机数
- }
+
+function getatime() {
+	return "?atime=" + new Date().getTime(); //获取当前时间作为随机数
+}
 
 /* 这是改变自Lupin所制造的一种打印字符
  * 这样使用它，str为原始串(%s代表标记),subs为一个匹配数组
  * 如果是单项，不需要数组，这里会转换
  * 如果多项，必须数组，否则只转换第一项
- * 实现部分，前者是字符串，使用%s作为匹配，后者是匹配组们 
+ * 实现部分，前者是字符串，使用%s作为匹配，后者是匹配组们
  * 一个使用就像是：printf("hello%s,why %s is here",["you","me"])
  * todo，增加五个附加值，避免每次要数组，事实上需要的参数并不太多
  */
@@ -303,21 +317,21 @@ Redirect.prototype = { //零件构建
 	 * 存在返回true，不存在返回false
 	 * 就像是 !!object
 	 */
-	check: function (from) {
+	check: function(from) {
 		return (this.date[from] !== undefined); //返回是否未定义
 	},
 	/* 格式化/符号-看起来没有必要，因为它自己会归纳 */
-	esc: function (str) {
+	esc: function(str) {
 		return str.replace("\\", "\\\\");
 	},
 	/* 初始化一切玩意 */
-	init: function () {
+	init: function() {
 		this.date = {}; //这里看起来如果操作原型的话就不同属性了__prototype_啥子的
 	},
 	/* 推入重定向
-	 * 如果原始存在，那就更新重定向 
+	 * 如果原始存在，那就更新重定向
 	 */
-	push: function (from, to) {
+	push: function(from, to) {
 		if (to == "" || from == "") { //无效值或者一样值
 			//清空记录的重定向？
 			return false; //一致没必要送入
@@ -330,7 +344,7 @@ Redirect.prototype = { //零件构建
 		return true;
 	},
 	/* 移除重定向 */
-	remove: function (from) {
+	remove: function(from) {
 		if (!this.check(from)) //不存在，看起来这个判断是可以行的，因为有依赖数组
 		{
 			return false; //本来不存在，但是得到了想要的
@@ -341,7 +355,7 @@ Redirect.prototype = { //零件构建
 	/* 推出重定向 
 	 * 如果获得不到，那么返回原来一样的
 	 */
-	pull: function (from) {
+	pull: function(from) {
 		if (!this.check(from)) //不存在，返回原来的
 		{
 			return from;

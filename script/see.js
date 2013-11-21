@@ -282,11 +282,13 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			var desc_title = title_get;
 			if (edit_type.isfind) {
 				desc_title = ominibox_package_desc_title(title_get); //搜索模式封装，它是单独的
-			}
+			};
+			//hoho,亮一亮,灯点亮...
+			var match_str = ominibox_get_highline_forall(title_get, text);
 			//push入数据，它是个数组，实际上
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
-				description: desc_title + near_str + diff_info //这是描述
+				description: match_str + near_str + diff_info //这是描述
 			});
 		}
 		if (!lastsearch && search_result.length < 5 && pages == 1) //结果不足，只是在第一页
@@ -324,8 +326,16 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 function get_suggest(text, edit_type, str_new_win, callback) {
 	/* 名字空间的定义	
 	 */
-	var name_space_need = "&namespace=666|0"; //目前还不工作!
-	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(text); //构造字串
+	var name_space_need = "&namespace="; //目前还不工作!
+	var suggest_text = text; //临时寄存文本内容
+	var think_patern = /^想法[ ]/; //想法的匹配串
+	if (suggest_text.match(think_patern)) {
+		name_space_need += "0"; //永远只该执行一次
+		suggest_text = suggest_text.replace(think_patern, "想法:");
+	} else {
+		name_space_need += "0"; //永远只该执行一次
+	}
+	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest" + name_space_need + "&search=" + encodeURIComponent(suggest_text); //构造字串
 	//定义当前请求函数，以便后来请求
 	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
 		var results = [];
@@ -343,7 +353,7 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 		//这是每一个结果的处置
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index]; //处理这个玩意
-			if (str_is_about_same(title_get, text)) //完全匹配-除了大概一样
+			if (str_is_about_same(title_get, suggest_text)) //完全匹配-除了大概一样
 			{
 				//一致提醒
 				if (edit_type.isedit) {
@@ -358,9 +368,9 @@ function get_suggest(text, edit_type, str_new_win, callback) {
 					put_info("噢!<url>太好了!</url>探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
 
-				normal_list.push(text, title_get); //送入规格化信息
+				normal_list.push(suggest_text, title_get); //送入规格化信息
 			}
-			var match_str = ominibox_get_highline(title_get, text);
+			var match_str = ominibox_get_highline(title_get, suggest_text);
 			//push入数据，只是坏情况发生的时候
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
@@ -434,7 +444,7 @@ function get_more_info(text, edit_type, str_new_win, faild_results, result_arry,
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index];
 			var should_get = title_get; //将调查的数据
-			var match_str = ominibox_get_highline(title_get, text); //匹配标题
+			var match_str = ominibox_get_highline_forall(title_get, text); //匹配标题
 			var def_show_info = match_str + "\t       <dim>-->"; //默认标题信息
 			var show_info = def_show_info; //探索进一步的信息串
 			//todo，匹配信息
