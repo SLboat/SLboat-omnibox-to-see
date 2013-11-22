@@ -127,23 +127,31 @@ function ominibox_get_highline_forall(title_get, text) {
 }
 
 /* 处理特别命名空间里的空格描述方式
- *  传入待处理的标题
+ *  传入待处理的标题,是否只是查询模式
+ * 正常返回替换后的结果,查询模式返回匹配的名字空间
  * 目前支持[想法:],[短英语:],[分类:]
  */
 
-function slboat_namespace_take(title) {
+function slboat_namespace_take(title, just_query) {
 	/* 可供添加的还有扩展啥的 */
+	var just_query = just_query || false;
 	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
+	var match_namespace = ""; //无效的时候
 	ns_namespaces_arr.every(function(ns_namespace) {
 		var ns_match_patern = new RegExp("^(" + ns_namespace + ")([ ]+)")
 		if (title.match(ns_match_patern)) {
+			match_namespace = ns_namespace;
 			title = title.replace(ns_match_patern, "$1:"); //替换每一种符合的可能..
 			return false; //就此结束
 		} else {
 			return true; //继续来一回
 		};
 	});
-	return title;
+	if (just_query) {
+		return match_namespace;
+	} else {
+		return title; //返回最终标题
+	};
 };
 
 /* 转换search返回的sniff的匹配字串

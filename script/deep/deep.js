@@ -765,23 +765,27 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 	var title = text; //默认的标题,用到的话
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
-		encodeURIComponent(tips_title) + "&title="
+		encodeURIComponent(tips_title) + "&title=";
 	//处理新窗口
 	if (edit_type.islast) {
 		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
 
-	} else if (edit_type.isnewtab) { //一起+那就放回去
-		/* 标题置换命名空间 */
-		title = slboat_namespace_take(chk_redict(text));
-		tab_new(edit_link + title); //处理重定向
-
-	} else if (edit_type.isedit) { //编辑模式
+	} else if (edit_type.isedit || edit_type.isnewtab) { //编辑模式
 
 		title = slboat_namespace_take(chk_redict(text));
-		tab_go(edit_link + chk_redict(title));
+		edit_link += chk_redict(title);
+		match_namespace = slboat_namespace_take(chk_redict(text), true);
+		if (match_namespace == "短英语") { //如果匹配了短英语
+			edit_link += "&preload=模板:短英语/预置"; //加上预置页面
+		};
 
-	} else if (edit_type.iswatch) //监视列表
-	{
+		if (edit_type.isnewtab) { //新标签页打开..
+			tab_new(edit_link);
+		} else {
+			tab_go(edit_link);
+		};
+
+	} else if (edit_type.iswatch) { //监视列表
 		var watch_url = site_url + "/w/index.php?title=Special:Watchlist"; //用户的监视列表标记
 		watch_url += "&days=0"; //没有限制日期
 		tab_go(watch_url);
