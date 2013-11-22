@@ -58,10 +58,15 @@ function edit_chk(text) { //检查编辑模式
 	//全局替换句号为点号，或许只处理最后几个字符就好了？
 	text = text.replace(/。/g, ".");
 
+	/* 临时的定制名字空间倒置写法 */
+	text = slboat_replace_namespace(text, "想法");
+	text = slboat_replace_namespace(text, "短英语");
+
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
 		edit_type.newtext = str_getlast(text, suffix_help.length).str; //返回剩余的一部分
-	} else if (text.length == 0 || text == ".last" || text == "最近") //最近见识
+	} else
+	if (text.length == 0 || text == ".last" || text == "最近") //最近见识
 		edit_type.islast = true; //设置标记
 	else if (str_chklast(text, suffix_copy)) { //当前标签编辑
 		edit_type.iscopy = true; //设置标记

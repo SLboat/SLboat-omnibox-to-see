@@ -22,9 +22,7 @@ function str_chklast(text, last) {
 //todo: 根据文本数组来一个个匹配一个包含一致，并且给出切割后的
 
 function str_getlast(text, how_long) {
-	if (typeof(how_long) == "undefined") {
-		how_long = 1; //未指定赋予1
-	}
+	var how_long = how_long || 1; //默认值
 	if (text.length > 0) {
 		return {
 			"last": text.substr(text.length - how_long, how_long), //切断尾部
@@ -102,6 +100,19 @@ function str_up1letter(text) {
 	return text.charAt(0).toUpperCase() + text.substr(1, text.length);
 }
 
+/* 检查校准名字空间 
+ * 给予原始字符串,然后校验掉
+ * 比如[制造者+想法] → [想法:制造者]
+ */
+function slboat_replace_namespace(text, ns_namespace) {
+	var check_namespaces = "+" + ns_namespace; //用于检查尾巴的字符
+	if (text && str_chklast(text, check_namespaces)) {
+		/* 重新生成子串去工作 */
+		text = printf("%s:%s+", [ns_namespace, str_getlast(text, check_namespaces.length + 1).str]);
+	};
+	return text;
+};
+
 /* 高亮匹配的部分-使用<match>语法
  *	传入获得的完整标题，输入的字符
  * 传回匹配串
@@ -137,11 +148,17 @@ function slboat_namespace_take(title, just_query) {
 	var just_query = just_query || false;
 	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
 	var match_namespace = ""; //无效的时候
+	var the_check_add_patern = ""; //校验[:]模式关闭
+	if (just_query) {
+		the_check_add_patern = "|:"; //额外增加的校验模式
+	};
 	ns_namespaces_arr.every(function(ns_namespace) {
-		var ns_match_patern = new RegExp("^(" + ns_namespace + ")([ ]+)")
+		var ns_match_patern = new RegExp(printf("^(%s)([ ]+%s)", [ns_namespace, the_check_add_patern]));
 		if (title.match(ns_match_patern)) {
 			match_namespace = ns_namespace;
-			title = title.replace(ns_match_patern, "$1:"); //替换每一种符合的可能..
+			if (!just_query) {
+				title = title.replace(ns_match_patern, "$1:"); //替换每一种符合的可能..
+			}
 			return false; //就此结束
 		} else {
 			return true; //继续来一回
