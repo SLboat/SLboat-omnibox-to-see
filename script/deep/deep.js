@@ -192,7 +192,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			}, false); //非最后一次
 		} else { //非搜索模式
 			moreinfo_callback = function(results) { //原始数据为一个字串表
-				if (need_more && results[0].content != "nothing i got") //需要更多信息，提醒应该换换，有得到原始字串
+				if (need_more && !(results.length == 1 && results[0].content == "nothing i got")) //需要更多信息，提醒应该换换，有得到原始字串
 				{
 					/* 注意:这里理论上不能放置 */
 					suggest(results); //试图直接丢出去,奇怪的似乎能工作
