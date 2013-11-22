@@ -126,12 +126,24 @@ function ominibox_get_highline_forall(title_get, text) {
 	return title_get;
 }
 
-/* 处理特别命名空间里的空格描述方式 */
+/* 处理特别命名空间里的空格描述方式
+ *  传入待处理的标题
+ * 目前支持[想法:],[短英语:],[分类:]
+ */
 
-function slboat_namespace_tak(title) {
-	var ns_thinking = /^想法[ ]+/;
-	return title.replace(ns_thinking, "想法:"); //替换返回
-}
+function slboat_namespace_take(title) {
+	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
+	ns_namespaces_arr.every(function(ns_namespace) {
+		var ns_match_patern = new RegExp("/^" + ns_namespace + "([ ]+)")
+		if (title.match(ns_match_patern)) {
+			title = title.replace(ns_match_patern, ":"); //替换每一种符合的可能..
+			return false; //就此结束
+		} else {
+			return true; //继续来一回
+		};
+	});
+	return title;
+};
 
 /* 转换search返回的sniff的匹配字串
  * 输入原始的字串
@@ -148,7 +160,11 @@ function slboat_get_match(snippet) {
 	return snippet;
 }
 
-/* 替换所有的括号标记,注意这里不能用作结果的替换,只能作为结果获得值 */
+/* 替换所有的XML特别字符(可能引来冲突的字符)
+ * 输入要替换的内容
+ * 注意: 这里不能用作结果的替换,只能作为结果获得值
+ * 致谢:http://stackoverflow.com/questions/7918868/how-to-escape-xml-entities-in-javascript
+ */
 
 function ecsape_all_xmlstr(content) {
 	return content.replace(/&/g, '&amp;')
@@ -156,12 +172,6 @@ function ecsape_all_xmlstr(content) {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&apos;');
-}
-
-/* 只是简单的替换一个字符串 */
-
-function ominibox_ecsape_xmlstr(desc) {
-	return desc.replace(/&/g, "&amp;");
 }
 
 /* 地址栏的小玩意，逃脱xml字符
@@ -176,7 +186,7 @@ function ominibox_ecsape_xmlstr_results(results) {
 		if (results[one].description.search(/&/) > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
 		{
 			//这家伙有问题,开始处置程序,而且是全部替换
-			results[one].description = ominibox_ecsape_xmlstr(results[one].description);
+			results[one].description = results[one].description.replace(/&/g, "&amp;");;
 		}
 	}
 	//送回去所有检阅完毕的人们
