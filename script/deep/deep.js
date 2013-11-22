@@ -1,3 +1,16 @@
+function slboat_namespace_take(title) {
+	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
+	ns_namespaces_arr.every(function(ns_namespace) {
+		var ns_match_patern = new RegExp("^" + ns_namespace + "([ ]+)")
+		if (title.match(ns_match_patern)) {
+			title = title.replace(ns_match_patern, ":"); //替换每一种符合的可能..
+			return false; //就此结束
+		} else {
+			return true; //继续来一回
+		};
+	});
+	return title;
+};
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com"; //请求站点
 var freeze_flag = false; //冻结更新
@@ -243,7 +256,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
 	} else {
 		strwhat = "title"; //标题好的
-		LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
+		LOOK_FOR_TEXT = slboat_namespace_take(text); //临时寄存文本内容
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
 	}
 
@@ -283,7 +296,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		for (var index = 0; index < search_result.length; index++) //递归啊，建造啊
 		{
 			title_get = search_result[index].title; //标题好吗，模糊标题一样
-			diff_info = slboat_get_match(ecsape_all_xmlstr(search_result[index].snippet)); //匹配内容
+			diff_info = slboat_get_match((search_result[index].snippet)); //匹配内容
 			if (diff_info.length < 1) //没有过多信息
 			{
 				//通常的它们会混在一起
@@ -349,7 +362,7 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 	} else {
 		name_space_need += "0"; //普通空间
 	};
-	var LOOK_FOR_TEXT = slboat_namespace_tak(text); //临时寄存文本内容
+	var LOOK_FOR_TEXT = slboat_namespace_take(text); //临时寄存文本内容
 	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
 	req_url += name_space_need; //加上名字空间
 
@@ -420,7 +433,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 	});
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
 	/* 处于意外的情况-这里会发生更多意外 */
-	if (titles_all="nothing i got|"){ //如果没有数据的话
+	if (titles_all == "nothing i got") { //如果没有数据的话
 		callback(orgin_results); //传回旧的数据
 		return false;
 	};
