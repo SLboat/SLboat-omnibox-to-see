@@ -429,7 +429,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 	};
 	//这里不需要命名空间,不要做这种试图
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
-	req_url += "&cllimit=" + result_arry.length; //这里应该比输入结果大..无论如何
+	//req_url += "&cllimit=" + result_arry.length; //这里应该比输入结果大..无论如何
 
 	var onfaild = function(e) //如果发生了错误
 	{
@@ -716,7 +716,7 @@ function get_json(req_url, callback, onerror) {
 		errhand = onerror;
 	} else {
 		errhand = put_error;
-	}
+	};
 	req.open("GET", req_url, true);
 	req.onload = function() {
 		if (this.status == 200) {
@@ -730,6 +730,7 @@ function get_json(req_url, callback, onerror) {
 			errhand(e);
 		}
 	};
+	// req.timeout = 1000; //未来的超时设置?
 	req.send();
 	return req; //返回原型
 }
