@@ -131,19 +131,19 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 	};
 
 	/* 重新封装一个可靠的传回去的回传函数 */
-	var suggest = function(results) {
+	var suggest = function(got_results) {
 		//处理寻找模式不需要
 		if (!edit_type.isfind || edit_type.islast) {
 			fonts_fix_load(); //载入字体设置-如果修改了
 			if (fonts_fix.iswork) //如果在工作的话
 			{
-				results = ominibox_fix_desc(results); //暂时去除修理描述信息
+				got_results = ominibox_fix_desc(got_results); //暂时去除修理描述信息
 			}
 		}
 		//处理掉干扰xml字串，看起来是最后的了
-		results = ominibox_ecsape_xmlstr_results(results);
+		got_results = ominibox_ecsape_xmlstr_results(got_results);
 		//传出结果
-		send_suggest(results);
+		send_suggest(got_results);
 	};
 
 	//处理编辑模式字符，看起来没啥坏处
@@ -192,8 +192,10 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			}, false); //非最后一次
 		} else { //非搜索模式
 			moreinfo_callback = function(results) { //原始数据为一个字串表
-				if (need_more && results.length > 0) //需要更多信息，提醒应该换换，有得到原始字串
+				if (need_more && results[0].content != "nothing i got") //需要更多信息，提醒应该换换，有得到原始字串
 				{
+					/* 注意:这里理论上不能放置 */
+					suggest(results); //试图直接丢出去,奇怪的似乎能工作
 					get_more_info(text, edit_type, str_new_win, results, function(results) {
 						suggest(results); //传回最终研究内容
 					}); //呼叫下一回合
