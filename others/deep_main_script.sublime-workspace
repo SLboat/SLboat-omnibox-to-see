@@ -1,0 +1,511 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"ti",
+				"title"
+			],
+			[
+				"ns",
+				"ns_match_patern"
+			],
+			[
+				"fun",
+				"function"
+			],
+			[
+				"for",
+				"forEach"
+			],
+			[
+				"curr",
+				"curr_pos"
+			],
+			[
+				"re",
+				"replace"
+			],
+			[
+				"line",
+				"line_now"
+			],
+			[
+				"star",
+				"star_line_flag"
+			],
+			[
+				"lin",
+				"line_length"
+			],
+			[
+				"str",
+				"start_pos"
+			],
+			[
+				"sele",
+				"selectionStart"
+			],
+			[
+				"st",
+				"star_patern"
+			],
+			[
+				"de",
+				"default_satrline"
+			],
+			[
+				"in",
+				"insertTags"
+			],
+			[
+				"all",
+				"alltext"
+			],
+			[
+				"mo",
+				"movmouse"
+			],
+			[
+				"is",
+				"is_bad_line"
+			],
+			[
+				"ma",
+				"make_leave"
+			],
+			[
+				"le",
+				"level"
+			],
+			[
+				"m",
+				"make_leave"
+			],
+			[
+				"ne",
+				"nexttext"
+			],
+			[
+				"pr",
+				"prevtext"
+			],
+			[
+				"cu",
+				"currline"
+			],
+			[
+				"sel",
+				"selectionEnd"
+			],
+			[
+				"pre",
+				"prevlinearr"
+			],
+			[
+				"get",
+				"get_api_sig_unpackUTF"
+			],
+			[
+				"pho",
+				"photos_to_del"
+			],
+			[
+				"photo",
+				"photosets_id"
+			],
+			[
+				"ph",
+				"photosets_id"
+			],
+			[
+				"call",
+				"call_flickr_api_delsets"
+			],
+			[
+				"fo",
+				"focused"
+			],
+			[
+				"sen",
+				"send_back_tab"
+			],
+			[
+				"windo",
+				"windowId"
+			],
+			[
+				"fasle",
+				"false"
+			],
+			[
+				"ch",
+				"check_me"
+			],
+			[
+				"pic",
+				"pic_Desc"
+			],
+			[
+				"pu",
+				"public_me"
+			],
+			[
+				"pi",
+				"pic_Desc"
+			],
+			[
+				"des",
+				"description"
+			],
+			[
+				"no",
+				"nothing_me"
+			],
+			[
+				"img",
+				"img_id"
+			],
+			[
+				"blue",
+				"blur_me"
+			],
+			[
+				"id",
+				"idstr"
+			],
+			[
+				"set",
+				"setBadgeText"
+			],
+			[
+				"com",
+				"command"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 67.0,
+		"selected_items":
+		[
+			[
+				"qu",
+				"Git: Quick Commit"
+			],
+			[
+				"push",
+				"Git: Push"
+			],
+			[
+				"quck",
+				"Git: Quick Commit"
+			],
+			[
+				"",
+				"Git: Commit"
+			],
+			[
+				"form",
+				"Format: Javascript"
+			],
+			[
+				":push",
+				"Git: Push"
+			],
+			[
+				"git:pu",
+				"Git: Pull"
+			],
+			[
+				"git",
+				"Git: Push"
+			],
+			[
+				"git:c",
+				"Git: Quick Commit"
+			],
+			[
+				"com",
+				"Git: Commit"
+			],
+			[
+				"git:com",
+				"Git: Commit"
+			],
+			[
+				"git diff",
+				"Git: Diff All"
+			],
+			[
+				"gir",
+				"Git: Commit history"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"package",
+				"Package Control: Discover Packages"
+			],
+			[
+				"pa",
+				"Package Control: List Packages"
+			]
+		],
+		"width": 467.0
+	},
+	"console":
+	{
+		"height": 174.0,
+		"history":
+		[
+			"import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/script/deep/deep_lib.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/script/deep/deep.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/others/deep_main_script.sublime-project",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/script/deep/deep_fonts_fix.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/manifest.json",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/deep.html",
+		"/Users/sen/tools/SLboat_chrome/SLboat-omnibox-to-see/script/see_lib.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/script/Flickr/Flickr_GetPicsByAPI.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/script/Flickr/Flickr_GetPics_Home.js",
+		"/Users/sen/Project/Mediawiki-Gadget-HotKeyEditor/js/Hotkey_Editor.js",
+		"/Users/sen/Project/jquery.hotkeys/jquery.hotkeys.js",
+		"/Users/sen/Project/jquery.hotkeys/test/test-static-07.html",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/script/Flickr/Flickr_SetLotPicsDesc.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/manifest.json",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/set.html",
+		"/Users/sen/Project/openwrt-wr703-slboat-mod/build_config/slboat.config",
+		"/Users/sen/Project/openwrt-wr703-slboat-mod/files/lib/wifi/mac80211.sh",
+		"/Users/sen/Project/openwrt-wr703-slboat-mod/files/etc/config/system",
+		"/Users/sen/Project/jquery-textcomplete-orgin-test_ac/jquery.textcomplete.js",
+		"/Users/sen/Project/jquery.hotkeys/test-static-01.html",
+		"/Users/sen/Project/jquery.hotkeys/test-static-05.html",
+		"/Users/sen/Project/jquery.hotkeys/test-static-07.html",
+		"/Users/sen/Project/jquery.hotkeys/test-static-02.html",
+		"/Users/sen/Project/jquery.hotkeys/test-static-03.html",
+		"/Users/sen/Project/jquery.hotkeys/test-static-04.html",
+		"/Users/sen/Project/jquery-textcomplete/origin.html",
+		"/Users/sen/Project/jquery-textcomplete/index.html",
+		"/Users/sen/Project/Open-in-Chrome/OpenInChrome.safariextension/global.html",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/script/Flickr/debug_only/Flickr_Photosets.batch_delete.js",
+		"/Users/sen/tools/SLboat_chrome/SLboat-clip-for-see-chrome/script/Home_of_INK/ink_Flickr_Men.js",
+		"/Users/sen/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/sen/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap"
+	],
+	"find":
+	{
+		"height": 40.0
+	},
+	"find_in_files":
+	{
+		"height": 102.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"slboat_namespace_tak",
+			"ns_namespaces",
+			"ominibox_ecsape_xmlstr",
+			"管理页获取",
+			"管理",
+			"来自",
+			"anewline",
+			"find_id_index",
+			"=y",
+			"luci",
+			"=y",
+			"reset",
+			"safe",
+			"wait",
+			"failsafe",
+			"alardy_have_leave",
+			"is_in_newline",
+			"editor = ",
+			"editor",
+			"match",
+			"matchfa",
+			"match",
+			"patch_edittool",
+			"make_leave",
+			"$(\"#ca-protect a\")",
+			"insertkat",
+			"movmouse",
+			"removecurrline",
+			"line_lenght",
+			"prevlinestart",
+			"title_tool",
+			"is_bad_normal_line",
+			"is_bad_line",
+			"\"+",
+			"ctrl",
+			"\"ctrl+",
+			"meta",
+			"movmouse",
+			"match",
+			"in_tag",
+			"req",
+			"meta",
+			"mata",
+			"right",
+			"HOOK_FOR_PIC_CAN_CHECKED",
+			"send_back_tab",
+			"sender_tab",
+			"true",
+			"！",
+			"：",
+			"，",
+			"ispublic",
+			"max_per_time_work",
+			"max_num",
+			"Scan_All_Pics_For_Desc",
+			"id",
+			"pics",
+			"$(pics)",
+			"$pic",
+			"($",
+			"pic",
+			"blur_mush",
+			"$(pics)",
+			"set_inkicon_color",
+			"ready",
+			"sender",
+			"init_inkicon_color",
+			"setBadgeText"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 40.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.git":
+	{
+		"height": 154.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 154.0
+	},
+	"project": "deep_main_script.sublime-project",
+	"replace":
+	{
+		"height": 60.0
+	},
+	"save_all_on_build": false,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 87.0,
+		"selected_items":
+		[
+			[
+				"escape",
+				"ominibox_ecsape_xmlstr"
+			]
+		],
+		"width": 392.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

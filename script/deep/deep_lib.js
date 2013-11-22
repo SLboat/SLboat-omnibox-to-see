@@ -132,11 +132,11 @@ function ominibox_get_highline_forall(title_get, text) {
  */
 
 function slboat_namespace_take(title) {
-	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
+	var ns_namespaces_arr = ["想法", "分类", "短英语", "扩展"]; //支持的名字空间
 	ns_namespaces_arr.every(function(ns_namespace) {
-		var ns_match_patern = new RegExp("/^" + ns_namespace + "([ ]+)")
+		var ns_match_patern = new RegExp("^(" + ns_namespace + ")([ ]+)")
 		if (title.match(ns_match_patern)) {
-			title = title.replace(ns_match_patern, ":"); //替换每一种符合的可能..
+			title = title.replace(ns_match_patern, "$1:"); //替换每一种符合的可能..
 			return false; //就此结束
 		} else {
 			return true; //继续来一回
@@ -156,12 +156,18 @@ function slboat_get_match(snippet) {
 	snippet = snippet.replace(/<span class='searchmatch'>/g, "<" + use_tag + ">");
 	//转换右标签
 	snippet = snippet.replace(/<\/span>/g, "</" + use_tag + ">");
-	//todo:切割长度？
+
+	//用XML处理后再来一次,这里还没有自动化处理,目前没有机会用上..
+	//snippet = snippet.replace(/&lt;span class=&apos;searchmatch&apos;&gt;/g, "<" + use_tag + ">");
+	//snippet = snippet.replace(/&lt;\/span&gt;/g, "</" + use_tag + ">");
+
+	//todo:切割长度？看起来没必要
 	return snippet;
 }
 
 /* 替换所有的XML特别字符(可能引来冲突的字符)
  * 输入要替换的内容
+ * 替换字符[& ,> ," ,']
  * 注意: 这里不能用作结果的替换,只能作为结果获得值
  * 致谢:http://stackoverflow.com/questions/7918868/how-to-escape-xml-entities-in-javascript
  */
@@ -172,7 +178,7 @@ function ecsape_all_xmlstr(content) {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&apos;');
-}
+};
 
 /* 地址栏的小玩意，逃脱xml字符
  * 由小约子发现的# Bug而来。
@@ -181,12 +187,14 @@ function ecsape_all_xmlstr(content) {
  */
 
 function ominibox_ecsape_xmlstr_results(results) {
+	var bad_xml_patern = /&(?!amp;|lt;|gt;|quot;|apos;)/g; //不合理的xml字符
 	//开始检阅xml字符
 	for (one in results) {
+		/* 或许该让match来干活了 */
 		if (results[one].description.search(/&/) > -1) //字符串的搜索大于-1才被释放，-1的是绝对好人
 		{
 			//这家伙有问题,开始处置程序,而且是全部替换
-			results[one].description = results[one].description.replace(/&/g, "&amp;");;
+			results[one].description = results[one].description.replace(bad_xml_patern, "&amp;");;
 		}
 	}
 	//送回去所有检阅完毕的人们
