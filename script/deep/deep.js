@@ -427,8 +427,8 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		callback(orgin_results); //传回旧的数据
 		return false;
 	};
+	//这里不需要命名空间,不要做这种试图
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=5&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
-	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
 
 	var onfaild = function(e) //如果发生了错误
 	{
