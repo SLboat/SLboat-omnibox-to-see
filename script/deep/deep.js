@@ -1,16 +1,3 @@
-function slboat_namespace_take(title) {
-	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
-	ns_namespaces_arr.every(function(ns_namespace) {
-		var ns_match_patern = new RegExp("^" + ns_namespace + "([ ]+)")
-		if (title.match(ns_match_patern)) {
-			title = title.replace(ns_match_patern, ":"); //替换每一种符合的可能..
-			return false; //就此结束
-		} else {
-			return true; //继续来一回
-		};
-	});
-	return title;
-};
 var currentRequest = null; //当前请求
 var site_url = "http://see.sl088.com"; //请求站点
 var freeze_flag = false; //冻结更新
@@ -187,7 +174,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		return true; //完成工作
 	} else if (edit_type.isedit) {
 		//默认标记...
-		put_info("现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
+		put_info("现在" + str_new_win + "<url>建造</url>见识<url>[" + slboat_namespace_take(text) + "]</url>!");
 	}
 
 	//重定向无需初始化
@@ -784,11 +771,14 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
 
 	} else if (edit_type.isnewtab) { //一起+那就放回去
+		/* 标题置换命名空间 */
 		title = slboat_namespace_take(chk_redict(text));
 		tab_new(edit_link + title); //处理重定向
 
 	} else if (edit_type.isedit) { //编辑模式
-		tab_go(edit_link + chk_redict(text));
+
+		title = slboat_namespace_take(chk_redict(text));
+		tab_go(edit_link + chk_redict(title));
 
 	} else if (edit_type.iswatch) //监视列表
 	{

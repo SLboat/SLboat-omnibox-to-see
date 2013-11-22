@@ -132,7 +132,8 @@ function ominibox_get_highline_forall(title_get, text) {
  */
 
 function slboat_namespace_take(title) {
-	var ns_namespaces_arr = ["想法", "分类", "短英语", "扩展"]; //支持的名字空间
+	/* 可供添加的还有扩展啥的 */
+	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
 	ns_namespaces_arr.every(function(ns_namespace) {
 		var ns_match_patern = new RegExp("^(" + ns_namespace + ")([ ]+)")
 		if (title.match(ns_match_patern)) {
