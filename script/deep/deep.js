@@ -138,8 +138,8 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			if (fonts_fix.iswork) //如果在工作的话
 			{
 				got_results = ominibox_fix_desc(got_results); //暂时去除修理描述信息
-			}
-		}
+			};
+		};
 		//处理掉干扰xml字串，看起来是最后的了
 		got_results = ominibox_ecsape_xmlstr_results(got_results);
 		//传出结果
@@ -191,8 +191,9 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 				suggest(results); //搜索建议释放
 			}, false); //非最后一次
 		} else { //非搜索模式
-			moreinfo_callback = function(results) { //原始数据为一个字串表
-				if (need_more && !(results.length == 1 && results[0].content == "nothing i got")) //需要更多信息，提醒应该换换，有得到原始字串
+			moreinfo_callback = function(results, i_from_search_text) { //原始数据为一个字串表
+				i_from_search_text = i_from_search_text || false; //默认关闭
+				if (need_more && !i_from_search_text && !(results.length == 1 && results[0].content == "nothing i got")) //需要更多信息，提醒应该换换，有得到原始字串
 				{
 					/* 注意:这里理论上不能放置 */
 					suggest(results); //试图直接丢出去,奇怪的似乎能工作
@@ -320,7 +321,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			if (results.length == 0) //没有任何结果
 			{
 				put_info(printf("%s<url>探索不到</url>更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
-
+				
 				results.push({
 					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 					description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text) //这是描述
@@ -328,8 +329,9 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			} else { //获得了不少结果
 				put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s", [text, page_info])); //发绿？
 			}
-
-			callback(results); //回调回去
+			/* 这种假常量的意义看起来就是让传入的变量好识别一些 */
+			var I_FORM_SEARCH_TEXT = true; //作为常量好了
+			callback(results, I_FORM_SEARCH_TEXT); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
 
