@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"ed",
+				"edit_link"
+			],
+			[
+				"mat",
+				"match_namespace"
+			],
+			[
+				"edi",
+				"edit_type"
+			],
+			[
 				"ti",
 				"title"
 			],
@@ -191,12 +203,20 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 67.0,
+		"height": 392.0,
 		"selected_items":
 		[
 			[
+				"q",
+				"Git: Quick Commit"
+			],
+			[
 				"qu",
 				"Git: Quick Commit"
+			],
+			[
+				"dif",
+				"Git: Diff All"
 			],
 			[
 				"push",
@@ -333,6 +353,17 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"isfind",
+			"suffix_search",
+			"slboat_na",
+			"slboat_",
+			"新建",
+			"isnew",
+			"</nowiki>",
+			"<nowiki>",
+			"ominibox_ecsape_xmlstr_results",
+			"slboat_get_match",
+			"new",
 			"slboat_namespace_tak",
 			"ns_namespaces",
 			"ominibox_ecsape_xmlstr",
@@ -408,6 +439,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			""
 		],
 		"reverse": false,
 		"show_context": true,
@@ -465,7 +497,7 @@
 	"project": "deep_main_script.sublime-project",
 	"replace":
 	{
-		"height": 60.0
+		"height": 74.0
 	},
 	"save_all_on_build": false,
 	"select_file":
@@ -502,8 +534,8 @@
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_visible": false,
+	"side_bar_width": 143.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

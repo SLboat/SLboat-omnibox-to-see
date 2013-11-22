@@ -775,6 +775,8 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		title = slboat_namespace_take(chk_redict(text));
 		edit_link += chk_redict(title);
 		match_namespace = slboat_namespace_take(chk_redict(text), true);
+
+		/* 预置模板处理-如果有的话 */
 		if (match_namespace == "短英语") { //如果匹配了短英语
 			edit_link += "&preload=模板:短英语/预置"; //加上预置页面
 		};
