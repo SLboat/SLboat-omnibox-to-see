@@ -428,7 +428,8 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		return false;
 	};
 	//这里不需要命名空间,不要做这种试图
-	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=5&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
+	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
+	req_url += "&cllimit=" + result_arry.length; //这里应该比输入结果大..无论如何
 
 	var onfaild = function(e) //如果发生了错误
 	{
