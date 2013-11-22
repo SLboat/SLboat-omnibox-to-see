@@ -5,7 +5,7 @@ var freeze_flag = false; //冻结更新
 /* 命名空间支持 
  * 支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
  */
-var WORK_FOR_NAMESPACES = "0%7C1%7C12%7C666";
+var WORK_FOR_NAMESPACES = "0|1|12|430|666";
 
 /* 调试配置 */
 isdebug = false; //网络调试
@@ -410,22 +410,27 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
  * 回调输出结果-标准格式
  */
 
-function get_more_info(text, edit_type, str_new_win, faild_results, callback) {
+function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 	//todo: 增加提醒信息？堆栈保存上次的，然后再恢复？
 	//等待更深一步探索
 	var has_same_title = false; //有完全匹配标题的项目
 	var result_arry = []; //重建结果数组
-	faild_results.forEach(function(resust) {
+	orgin_results.forEach(function(resust) {
 		result_arry.push(resust.content); //推入...
 	});
 	var titles_all = result_arry.join("|"); //拼凑字符串，用于标题
+	/* 处于意外的情况-这里会发生更多意外 */
+	if (titles_all="nothing i got|"){ //如果没有数据的话
+		callback(orgin_results); //传回旧的数据
+		return false;
+	};
 	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&cllimit=5&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
 	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
 
 	var onfaild = function(e) //如果发生了错误
 	{
 		put_info("更深入探索见识的时候发生了些意外: [" + e.message + "], 这是初步探索");
-		callback(faild_results); //传回失败的数据
+		callback(orgin_results); //传回失败的数据
 		return false;
 	}
 	//开始解析
