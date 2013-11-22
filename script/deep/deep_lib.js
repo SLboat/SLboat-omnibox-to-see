@@ -108,7 +108,7 @@ function slboat_replace_namespace(text, ns_namespace) {
 	var check_namespaces = "+" + ns_namespace; //用于检查尾巴的字符
 	if (text && str_chklast(text, check_namespaces)) {
 		/* 重新生成子串去工作 */
-		text = printf("%s:%s+", [ns_namespace, str_getlast(text, check_namespaces.length + 1).str]);
+		text = printf("%s:%s+", [ns_namespace, str_getlast(text, check_namespaces.length).str]);
 	};
 	return text;
 };
