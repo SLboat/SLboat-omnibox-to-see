@@ -50,14 +50,14 @@ var need_more = true; //需要更多信息，用来过滤更多信息
 
 /* 常规检查官-检查是否在特定的编辑模式下 
  * 返回构建：
- * isedit:是否编辑，isnew:是否新建，newtext:过滤后的文字
+ * isedit:是否编辑，isnewtab:是否新建，newtext:过滤后的文字
  */
 
 function edit_chk(text) { //检查编辑模式
 	var edit_type = {
 		islast: false, //最近的见识
 		isedit: false, //编辑模式需要
-		isnew: false, //新标签页
+		isnewtab: false, //新标签页
 		newtext: text, //新的文字-传入给搜索
 		isfind: false, //搜索模式
 		onlytxt: false, //只搜索内容
@@ -81,14 +81,14 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.newtext = str_getlast(text, suffix_copy.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, suffix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
 		edit_type.isedit = true; //编辑模式
-		edit_type.isnew = true; //单独的标记
+		edit_type.isnewtab = true; //单独的标记
 		edit_type.newtext = str_getlast(text, suffix_edit_newtab.length).str; //切除
 	} else if (str_chklast(text, suffix_edit)) { //当前标签编辑
 		edit_type.isedit = true; //设置标记
 		edit_type.newtext = str_getlast(text, suffix_edit.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, suffix_edit_newtab_oldway)) { //新标签编辑，老方式
 		edit_type.isedit = true; //编辑模式
-		edit_type.isnew = true; //单独的标记
+		edit_type.isnewtab = true; //单独的标记
 		edit_type.newtext = str_getlast(text, suffix_edit_newtab_oldway.length).str; //切除
 	} else if (str_chklast(text, suffix_search)) { //搜索内容
 		//todo:兼并联合，不需要两次
@@ -136,7 +136,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		currentRequest.onreadystatechange = null;
 		currentRequest.abort();
 		currentRequest = null;
-	}
+	};
 
 	/* 重新封装一个可靠的传回去的回传函数 */
 	var suggest = function(results) {
@@ -152,11 +152,17 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		results = ominibox_ecsape_xmlstr_results(results);
 		//传出结果
 		send_suggest(results);
-	}
+	};
 
 	//处理编辑模式字符，看起来没啥坏处
 	edit_type = edit_chk(text); //检查类型，并且赋值
 	text = edit_type.newtext; //文字也处理了
+
+	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
+
+	if (edit_type.isnewtab) {
+		str_new_win = "进入<url>最近的海域</url>";
+	};
 
 	/* 特殊功能模式，这里不需要更多文本，也不能重复属性，只会执行第一个 */
 	if (edit_type.ishelp) { //一些帮助{
@@ -179,19 +185,10 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			suggest(results);
 		}); //来一些最近的监视列表
 		return true; //完成工作
-	}
-
-	//todo：直接放入到别的地方，或者封装到edit_type里
-	if (edit_type.isnew) {
-		//新的标记方式，字符串全部索引起来？
-		str_new_win = "进入<url>最近的海域</url>";
-	}
-	if (edit_type.isedit) {
+	} else if (edit_type.isedit) {
 		//默认标记...
-		put_info("它还不存在,现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
+		put_info("现在" + str_new_win + "<url>建造</url>见识<url>[" + text + "]</url>!");
 	}
-
-	put_info("<url>直接进入</url>森亮号航海见识开始探索[<match>" + text + "</match>]");
 
 	//重定向无需初始化
 	if (!edit_type.islast) { //过滤最近，但不排除无
@@ -296,7 +293,8 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		for (var index = 0; index < search_result.length; index++) //递归啊，建造啊
 		{
 			title_get = search_result[index].title; //标题好吗，模糊标题一样
-			diff_info = slboat_get_match((search_result[index].snippet)); //匹配内容
+			/* 这里返回来的结果已经做了xml处理,所以没啥可担心的 */
+			diff_info = slboat_get_match(search_result[index].snippet); //匹配内容
 			if (diff_info.length < 1) //没有过多信息
 			{
 				//通常的它们会混在一起
@@ -777,6 +775,7 @@ function tab_new(url) {
 chrome.omnibox.onInputEntered.addListener(function(text) {
 	var tips_title = "OminiboxSee"; //修改为英文的哪种简单标题
 	var edit_type = edit_chk(text); //检查类型
+	var title = text; //默认的标题,用到的话
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title="
@@ -784,8 +783,9 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 	if (edit_type.islast) {
 		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
 
-	} else if (edit_type.isnew) { //一起+那就放回去
-		tab_new(edit_link + chk_redict(text)); //处理重定向
+	} else if (edit_type.isnewtab) { //一起+那就放回去
+		title = slboat_namespace_take(chk_redict(text));
+		tab_new(edit_link + title); //处理重定向
 
 	} else if (edit_type.isedit) { //编辑模式
 		tab_go(edit_link + chk_redict(text));
