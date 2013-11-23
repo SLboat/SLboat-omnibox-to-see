@@ -1,13 +1,18 @@
-var currentRequest = null; //当前请求
-var site_url = "http://see.sl088.com"; //请求站点
-var freeze_flag = false; //冻结更新
+var THE_GREAT_REQUEST_WORKER = null; //当前请求
+var CONFIG_SITE_URL = "http://see.sl088.com"; //请求站点
+var FLAG_FREEZE_ME = false; //冻结更新
+
+/* 早送回,非常取决于Chrome的支持情况,目前在Chrome V31看起来工作的很好 */
+var FLAG_GET_BACK_BY_EARLY = true; //是否中途送回一次结果
 
 /* 命名空间支持 
  * 支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
  */
 var WORK_FOR_NAMESPACES = "0|1|12|430|666";
 
-/* 调试配置 */
+/* 调试配置
+ * 快速开启一般调试: logme();
+ */
 isdebug = false; //网络调试
 isdebug_fonts_fix = false; //字体调试
 
@@ -123,11 +128,11 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 
 	defreeze(); //解除冻结
 	//停止上次事件，看起来像是做了这个
-	if (currentRequest != null) {
+	if (THE_GREAT_REQUEST_WORKER != null) {
 		log("终止上次事件") //打印容易得到null
-		currentRequest.onreadystatechange = null;
-		currentRequest.abort();
-		currentRequest = null;
+		THE_GREAT_REQUEST_WORKER.onreadystatechange = null;
+		THE_GREAT_REQUEST_WORKER.abort();
+		THE_GREAT_REQUEST_WORKER = null;
 	};
 
 	/* 重新封装一个可靠的传回去的回传函数 */
@@ -195,8 +200,10 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 				i_from_search_text = i_from_search_text || false; //默认关闭
 				if (need_more && !i_from_search_text && !(results.length == 1 && results[0].content == "nothing i got")) //需要更多信息，提醒应该换换，有得到原始字串
 				{
-					/* 注意:这里理论上不能放置 */
-					suggest(results); //试图直接丢出去,奇怪的似乎能工作
+					if (FLAG_GET_BACK_BY_EARLY) { //提前回家
+						/* 注意:这里理论上不能放置 */
+						suggest(results); //试图直接丢出去,奇怪的似乎能工作
+					};
 					get_more_info(text, edit_type, str_new_win, results, function(results) {
 						suggest(results); //传回最终研究内容
 					}); //呼叫下一回合
@@ -228,7 +235,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
 	var LOOK_FOR_TEXT = text; //搜索内容
-	var req_url = site_url + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
+	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
 	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //工作的命名空间
 
 	//超过一页，不搜索标题先了
@@ -272,7 +279,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	}
 	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
 	//开始呼叫
-	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置		
+	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) { //处理返回的json如何处置		
 		log("搜索得到了", data);
 		if (data.error) { //出错了
 			put_info(printf("船长!收到错误报告: %s - %s", [data.error.code, data.error.info]));
@@ -314,6 +321,10 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		}
 		if (!lastsearch && search_result.length < 5 && pages == 1) //结果不足，只是在第一页
 		{
+			if (FLAG_GET_BACK_BY_EARLY) { //提前回家
+				/* 中间阶段放置一次结果 */
+				callback(results);
+			};
 			//递归
 			get_search_text(text, edit_type, results, callback, true);
 		} else { //会有结果吗
@@ -321,7 +332,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			if (results.length == 0) //没有任何结果
 			{
 				put_info(printf("%s<url>探索不到</url>更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
-				
+
 				results.push({
 					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 					description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text) //这是描述
@@ -357,11 +368,11 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 		name_space_need += "0"; //普通空间
 	};
 	var LOOK_FOR_TEXT = slboat_namespace_take(text); //临时寄存文本内容
-	var req_url = site_url + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
+	var req_url = CONFIG_SITE_URL + "/w/api.php?action=opensearch&limit=5&suggest&search=" + encodeURIComponent(LOOK_FOR_TEXT); //构造字串
 	req_url += name_space_need; //加上名字空间
 
 	//定义当前请求函数，以便后来请求
-	currentRequest = get_json(req_url, function(data) { //处理返回的json如何处置
+	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) { //处理返回的json如何处置
 		//这是内部的闭包,会吸收外面的环境
 		//用于一个本地的保留备份
 		result_arry = data[1]; //返回的数组，长度0就是没有结果，非全局非本地
@@ -432,7 +443,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		return false;
 	};
 	//这里不需要命名空间,不要做这种试图
-	var req_url = site_url + "/w/api.php?action=query&prop=categories&format=json&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
+	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&prop=categories&format=json&redirects&indexpageids&titles=" + encodeURIComponent(titles_all);
 	//req_url += "&cllimit=" + result_arry.length; //这里应该比输入结果大..无论如何
 
 	var onfaild = function(e) //如果发生了错误
@@ -442,7 +453,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		return false;
 	}
 	//开始解析
-	currentRequest = get_json(req_url, function(data) {
+	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
 		var results = []; //最终结果
 		var titles_arr = {}; //标题建立的一个查询队列
 		//重定向解析
@@ -548,7 +559,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 
 function slboat_getrecently(edit_type, callback) {
 	//todo，函数式改写，太有点混世了
-	var req_url = site_url + "/w/api.php?action=query&list=recentchanges&format=json&rctype=edit%7Cnew";
+	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=recentchanges&format=json&rctype=edit%7Cnew";
 	//获得最后一次操作，可能丢失最新的
 	req_url += "&rctoponly"; //重复的话只要一个
 	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES; //名字空间
@@ -570,7 +581,7 @@ function slboat_getrecently(edit_type, callback) {
 	req_url += "&rclimit=" + limit_need; //需要几个结果,将来截取
 
 	//如何移出去呢->也许在这里就很好了嘛
-	currentRequest = get_json(req_url, function(data) {
+	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
 		var results = [];
 		//todo：不要一次性算出两级，错误太多
 		var result_arry = data.query.recentchanges; //返回的数组，长度0就是没有结果
@@ -615,10 +626,10 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	var req_url;
 	if (edit_type.iswatchraw) //raw模式
 	{
-		req_url = site_url + "/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
+		req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
 		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
 	} else {
-		req_url = site_url + "/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
+		req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
 	}
 	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	perfix_tips = "";
@@ -627,7 +638,7 @@ function slboat_getwatchlist(text, edit_type, callback) {
 		perfix_tips = ",探索监视列表不需要带别的";
 	}
 	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
-	currentRequest = get_json(req_url, function(data) {
+	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
 		var results = [];
 		var result_arry; //结果字串
 
@@ -677,11 +688,11 @@ function resetDefaultSuggestion() {
 
 /* 释放到提醒栏
  * 如果需要输入内容，那就输入%s
- * 全局标记冻结freeze_flag开启的话，不会更新
+ * 全局标记冻结FLAG_FREEZE_ME开启的话，不会更新
  */
 
 function put_info(text) {
-	if (freeze_flag) {
+	if (FLAG_FREEZE_ME) {
 		return false; //冻结了
 	}
 	//默认的只能传送文字，遗憾的
@@ -775,11 +786,11 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 	var edit_type = edit_chk(text); //检查类型
 	var title = text; //默认的标题,用到的话
 	text = edit_type.newtext; //文字也处理了
-	var edit_link = site_url + "/w/index.php?action=edit&editintro=" +
+	var edit_link = CONFIG_SITE_URL + "/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title=";
 	//处理新窗口
 	if (edit_type.islast) {
-		tab_go(site_url + "/wiki/特殊:最近更改") //进入最近更改
+		tab_go(CONFIG_SITE_URL + "/wiki/特殊:最近更改") //进入最近更改
 
 	} else if (edit_type.isedit || edit_type.isnewtab) { //编辑模式
 
@@ -799,13 +810,13 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		};
 
 	} else if (edit_type.iswatch) { //监视列表
-		var watch_url = site_url + "/w/index.php?title=Special:Watchlist"; //用户的监视列表标记
+		var watch_url = CONFIG_SITE_URL + "/w/index.php?title=Special:Watchlist"; //用户的监视列表标记
 		watch_url += "&days=0"; //没有限制日期
 		tab_go(watch_url);
 
 	} else {
 		//正常情况下，当一样的时候让它自己跳转
-		tab_go(site_url + "/w/index.php?search=" + text);
+		tab_go(CONFIG_SITE_URL + "/w/index.php?search=" + text);
 	}
 });
 
@@ -842,13 +853,35 @@ function chk_redict(text) {
 
 function freeze() {
 	//冻结信息提示
-	freeze_flag = true;
+	FLAG_FREEZE_ME = true;
 }
 
 /* 互斥监督者，解除冻结提醒文字变动 */
 
 function defreeze() {
-	freeze_flag = false;
+	FLAG_FREEZE_ME = false;
+};
+
+/* 保存到Chrome本地数据库 */
+function chrome_had_save() {
+	chrome.storage.local.set({
+		"normal_list": normal_list.date,
+		"redict_list": redict_list.date,
+	}, function() {
+		log("本地存储了一下两份列表"); //这里是成功了
+	})
+};
+
+function chrome_had_load() {
+	chrome.storage.local.get(["normal_list", "redict_list"], function(items) {
+		if (items.normal_list) {
+			normal_list.date = items.normal_list; //赋入正常化
+		};
+		if (items.redict_list) {
+			redict_list.date = items.redict_list; //赋入重定向
+		};
+		log("本地存储载入设置成功咯;");
+	});
 }
 
 /* 最无用的家伙
