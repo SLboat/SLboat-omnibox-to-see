@@ -251,7 +251,8 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		} else {
 			search_text = !edit_type.onlytxt;
 		} //反转搜索
-	}
+	};
+
 	if (search_text) {
 		strwhat = "text";
 		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
@@ -259,7 +260,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		strwhat = "title"; //标题好的
 		LOOK_FOR_TEXT = slboat_namespace_take(text); //临时寄存文本内容
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
-	}
+	};
 
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
 		prefix = "所有入口处<url>(也探索标题)</url>...";
@@ -271,14 +272,15 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		//页数减少一，这里的页数真是太混乱了
 		page_info = "当前探索到第" + (pages - 1) + "页";
 		prefix = "深入的<url>第" + (pages - 1) + "页</url>...";
-	}
+	};
 
 	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
 	if (pages > 2) { //第二页开始切换
 		req_url += "&sroffset=" + (pages - 2) * 5; //搜索页数，每页五项
-	}
+	};
+
 	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
 	//开始呼叫
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) { //处理返回的json如何处置		
@@ -308,7 +310,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 					diff_info = "<dim>我没看错的话!它们是完全一样的!</dim>"
 				} else
 					diff_info = "<dim>它被不幸的找到了!尽管没有找到过多线索!</dim>";
-			}
+			};
 			var desc_title = title_get;
 			if (edit_type.isfind) {
 				desc_title = ominibox_package_desc_title(title_get); //搜索模式封装，它是单独的
@@ -341,11 +343,11 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 				});
 			} else { //获得了不少结果
 				put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s", [text, page_info])); //发绿？
-			}
+			};
 			/* 这种假常量的意义看起来就是让传入的变量好识别一些 */
 			callback(results, I_FORM_SEARCH_TEXT); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
-		}
+		};
 
 	}); //回调结束
 }
