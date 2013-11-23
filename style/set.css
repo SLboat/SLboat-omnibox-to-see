@@ -31,7 +31,7 @@ body p {
     padding-bottom: 43px;
     padding-left: 75px;
     padding-top: 40px;
-    background: url(./img/icon_48.png) no-repeat;
+    background: url(../img/see_48.png) no-repeat;
     background-size: 48px;
     background-position: 1px 33px;
     font-family: "Myriad Pro", Arial, Helvetica, sans-serif;
@@ -65,13 +65,13 @@ a { color: gray }
     color: white;
 }
 #mini_token { border-radius: 5px }
-/* »ñµÃÃÜ³×µÄÌáÊ¾ĞÅÏ¢ */
+/* è·å¾—å¯†åŒ™çš„æç¤ºä¿¡æ¯ */
 .tipsinfo {
     font-size: 70%;
     margin-bottom: 10px;
     color: #A07266;
 }
-/* ÆÕÍ¨µÄÌáÊ¾ĞÅÏ¢ */
+/* æ™®é€šçš„æç¤ºä¿¡æ¯ */
 .tip{
 	color: grey;
 	font-size: 60%;

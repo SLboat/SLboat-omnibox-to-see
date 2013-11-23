@@ -1,7 +1,7 @@
 {
-   "permissions": [ "clipboardWrite" ],
+   "permissions": ["clipboardWrite"],
    "background": {
-	  "page":"deep.html"
+      "page": "deep.html"
    },
    "options_page": "set.html",
    "description": "森亮号航海见识搜索！以一种不凡的是方式寻找，探索，和深入森亮号航海见识！",
@@ -14,10 +14,11 @@
       "keyword": "@"
    },
    "permissions": [
-	"tabs",
-	"http://see.sl088.com/*"
-	],
-   "version": "4.11.22",
+      "tabs",
+      "http://see.sl088.com/*",
+      "storage"
+   ],
+   "version": "4.11.23",
    "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxjfk9NprfMwsL2qpelw1ribl5R2YO9kOtpAl/LxGcLeZad3rdkDoFq8/HXCqOFHnvjBXF9tkoOrdDVVxf5Z6+ZLniHxmoMSE43ETjqr2vOiErfOkyt2zLSPxgDNbT1pEhYES5Fx9GY19pswexP6Y2Rt1f475FBpZ0IXIfymTJ/QIDAQAB",
    "manifest_version": 2
 }

@@ -303,6 +303,11 @@ function log(info, date) {
 	return true;
 }
 
+function logme() {
+	isdebug = !isdebug;
+	console.log("船长!已经" + ((isdebug) ? "开启" : "关闭") + "了调试日志");
+};
+
 /* 复制文本到剪贴板里这样送出去咯 */
 
 function copy_text(text) {
@@ -370,7 +375,8 @@ function printf(str, subs) {
 
 function Redirect() { //工厂制造
 	this.date = {}; //这是部件构造
-}
+};
+
 /* 重定向部件，第一次尝试结构化 */
 Redirect.prototype = { //零件构建
 	/* 重定向部件的结构 
@@ -399,7 +405,7 @@ Redirect.prototype = { //零件构建
 	 * 如果原始存在，那就更新重定向
 	 */
 	push: function(from, to) {
-		if (to == "" || from == "") { //无效值或者一样值
+		if (to == "" || from == "") { //无效值
 			//清空记录的重定向？
 			return false; //一致没必要送入
 		} else if (from == to) //已经一致了，抛弃所有的，要么就重写，抛弃比较好
@@ -408,6 +414,7 @@ Redirect.prototype = { //零件构建
 			return true; //已经被抛弃
 		}
 		this.date[from] = to; //直接的送入，和上次一样也不管了
+		/* 这里就是长效化的圣地了 */
 		return true;
 	},
 	/* 移除重定向 */

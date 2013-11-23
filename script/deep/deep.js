@@ -466,9 +466,12 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 				titles_arr[title_redirect.from] = {}; //几乎不会再被使用
 				titles_arr[title_redirect.from].to = title_redirect.to; //重定向指向，初步直针	
 				//转录重定向列表，一份随意而又庞大的表
-				redict_list.push(title_redirect.from, title_redirect.to);
-			}
-		}
+				var push_in = redict_list.push(title_redirect.from, title_redirect.to);
+				if (push_in) {
+					chrome_had_save(); //存储起来吧...
+				};
+			};
+		};
 		//给它转过去，让它飞翔
 		for (page_ids in data.query.pages) {
 			//这是处理的开始了
@@ -930,6 +933,8 @@ window.onload = function() {
 	/* 生产两个工厂 */
 	window.redict_list = new Redirect(); //工厂：重定向缓存列表
 	window.normal_list = new Redirect(); //工厂：一个正常化表
+	/* 载入读取数据 */
+	chrome_had_load();
 }
 
 /* 有了工厂又做下面的事情... */
