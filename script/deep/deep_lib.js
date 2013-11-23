@@ -319,6 +319,21 @@ function copy_text(text) {
 	return rv; //返回这玩意的执行
 }
 
+/* 尝试克隆一个object 
+ * 致谢:http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+ */
+
+function obj_clone(obj) {
+	if (obj == null || typeof(obj) != 'object')
+		return obj;
+	//这里似乎是得到原型等内容
+	var temp = obj.constructor(); // changed
+
+	for (var key in obj)
+		temp[key] = obj_clone(obj[key]);
+	return temp;
+};
+
 /* 得到一个看起来随机的大数字
  * 主要用来XHR啥子的
  */

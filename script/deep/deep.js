@@ -136,19 +136,20 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 	};
 
 	/* 重新封装一个可靠的传回去的回传函数 */
-	var suggest = function(got_results) {
+	var suggest = function(results) {
+		var final_results = obj_clone(results); //克隆一份,嘿嘿
 		//处理寻找模式不需要
 		if (!edit_type.isfind || edit_type.islast) {
 			fonts_fix_load(); //载入字体设置-如果修改了
-			if (fonts_fix.iswork) //如果在工作的话
+			if (fonts_fix.iswork()) //如果在工作的话
 			{
-				got_results = ominibox_fix_desc(got_results); //暂时去除修理描述信息
+				final_results = ominibox_fix_desc(final_results); //暂时去除修理描述信息
 			};
 		};
 		//处理掉干扰xml字串，看起来是最后的了
-		got_results = ominibox_ecsape_xmlstr_results(got_results);
+		final_results = ominibox_ecsape_xmlstr_results(final_results);
 		//传出结果
-		send_suggest(got_results);
+		send_suggest(final_results);
 	};
 
 	//处理编辑模式字符，看起来没啥坏处
@@ -195,7 +196,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			get_search_text(text, edit_type, results, function(results) {
 				suggest(results); //搜索建议释放
 			}, false); //非最后一次
-		} else { //非搜索模式
+		} else { //普通标题快速寻找
 			moreinfo_callback = function(results, i_from_search_text) { //原始数据为一个字串表
 				i_from_search_text = i_from_search_text || false; //默认关闭
 				if (need_more && !i_from_search_text && !(results.length == 1 && results[0].content == "nothing i got")) //需要更多信息，提醒应该换换，有得到原始字串
@@ -229,12 +230,13 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
  * todo:清理掉search_text，这个落后的玩意
  */
 
-function get_search_text(text, edit_type, results, callback, lastsearch) {
+function get_search_text(text, edit_type, work_results, callback, lastsearch) {
 	var near_str = ""; //接近提示
 	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
 	var LOOK_FOR_TEXT = text; //搜索内容
+	var I_FORM_SEARCH_TEXT = true; //作为常量好了
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
 	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //工作的命名空间
 
@@ -280,7 +282,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
 	//开始呼叫
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) { //处理返回的json如何处置		
-		log("搜索得到了", data);
+		log("搜索得到了", data); //日志标记
 		if (data.error) { //出错了
 			put_info(printf("船长!收到错误报告: %s - %s", [data.error.code, data.error.info]));
 			return false; //死咯
@@ -314,7 +316,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			//hoho,亮一亮,灯点亮...
 			var match_str = ominibox_get_highline_forall(title_get, text);
 			//push入数据，它是个数组，实际上
-			results.push({
+			work_results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 				description: match_str + near_str + diff_info //这是描述
 			});
@@ -323,17 +325,17 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		{
 			if (FLAG_GET_BACK_BY_EARLY) { //提前回家
 				/* 中间阶段放置一次结果 */
-				callback(results);
+				callback(work_results, I_FORM_SEARCH_TEXT);
 			};
-			//递归
-			get_search_text(text, edit_type, results, callback, true);
+			//递归最后一次的...
+			return get_search_text(text, edit_type, work_results, callback, true);
 		} else { //会有结果吗
 
-			if (results.length == 0) //没有任何结果
+			if (work_results.length == 0) //没有任何结果
 			{
 				put_info(printf("%s<url>探索不到</url>更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
 
-				results.push({
+				work_results.push({
 					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 					description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text) //这是描述
 				});
@@ -341,8 +343,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 				put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s", [text, page_info])); //发绿？
 			}
 			/* 这种假常量的意义看起来就是让传入的变量好识别一些 */
-			var I_FORM_SEARCH_TEXT = true; //作为常量好了
-			callback(results, I_FORM_SEARCH_TEXT); //回调回去
+			callback(work_results, I_FORM_SEARCH_TEXT); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
 
@@ -418,7 +419,7 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 			callback(results); //或许还要点别的？	
 		} else { //回调自己,再做一次
 			/* result 结果还会在吗?-这不是回调,不会存在的 */
-			get_suggest(text, edit_type, str_new_win, callback, true, results);
+			return get_suggest(text, edit_type, str_new_win, callback, true, results);
 		};
 	}); //完成任务
 }
@@ -546,7 +547,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		{
 			freeze(); //冻结标题!
 			//将未完成的结果传出去
-			get_search_text(text, edit_type, results, callback, false); //非最后一次
+			return get_search_text(text, edit_type, results, callback, false); //非最后一次
 		} else {
 			callback(results); //提交结果，完事
 			return false;
