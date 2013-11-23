@@ -237,6 +237,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var has_next_page = false; //没有下一页
 	var LOOK_FOR_TEXT = text; //搜索内容
 	var I_FORM_SEARCH_TEXT = true; //作为常量好了
+	var text_namespace = slboat_namespace_take(text, true); //本地工作的特别名称
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=search&format=json&srlimit=5"; //构建基础请求的原型,就像个孩子
 	req_url += "&srnamespace=" + WORK_FOR_NAMESPACES; //工作的命名空间
 
@@ -304,7 +305,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 			if (diff_info.length < 1) //没有过多信息
 			{
 				//通常的它们会混在一起
-				if (str_is_about_same(text, title_get)) //一致化了 
+				if (text_namespace != "分类" && str_is_about_same(text, title_get)) //一致化了 
 				{
 					normal_list.push(text, title_get); //送入规格化信息
 					diff_info = "<dim>我没看错的话!它们是完全一样的!</dim>"
@@ -363,7 +364,9 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 	/* 名字空间的定义	
 	 */
 	do_for_think = do_for_think || false; //为想法做一次
-	var results = results || [];
+	var results = results || []; //非要初始化吗?
+	var text_namespace = slboat_namespace_take(text, true); //本地工作的特别名称
+
 	var name_space_need = "&namespace="; //目前还不工作!
 	if (do_for_think) {
 		name_space_need += "666"; //666,想法...
@@ -405,9 +408,10 @@ function get_suggest(text, edit_type, str_new_win, callback, do_for_think, resul
 				} else {
 					put_info("噢!<url>太好了!</url>探索到存在<url>[" + title_get + "]</url>的见识!前往所在地吗?");
 				};
-
-				/* 暂存给进一步信息 */
-				normal_list.push(LOOK_FOR_TEXT, title_get); //送入规格化信息
+				if (text_namespace != "分类") {
+					/* 暂存给进一步信息 */
+					normal_list.push(LOOK_FOR_TEXT, title_get); //送入规格化信息
+				};
 			}
 			var match_str = ominibox_get_highline(title_get, LOOK_FOR_TEXT);
 			//push入数据，只是坏情况发生的时候
