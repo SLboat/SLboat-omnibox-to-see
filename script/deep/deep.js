@@ -230,7 +230,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
  * todo:清理掉search_text，这个落后的玩意
  */
 
-function get_search_text(text, edit_type, work_results, callback, lastsearch) {
+function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var near_str = ""; //接近提示
 	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
@@ -316,7 +316,7 @@ function get_search_text(text, edit_type, work_results, callback, lastsearch) {
 			//hoho,亮一亮,灯点亮...
 			var match_str = ominibox_get_highline_forall(title_get, text);
 			//push入数据，它是个数组，实际上
-			work_results.push({
+			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 				description: match_str + near_str + diff_info //这是描述
 			});
@@ -325,17 +325,17 @@ function get_search_text(text, edit_type, work_results, callback, lastsearch) {
 		{
 			if (FLAG_GET_BACK_BY_EARLY) { //提前回家
 				/* 中间阶段放置一次结果 */
-				callback(work_results, I_FORM_SEARCH_TEXT);
+				callback(results, I_FORM_SEARCH_TEXT);
 			};
 			//递归最后一次的...
-			return get_search_text(text, edit_type, work_results, callback, true);
+			return get_search_text(text, edit_type, results, callback, true);
 		} else { //会有结果吗
 
-			if (work_results.length == 0) //没有任何结果
+			if (results.length == 0) //没有任何结果
 			{
 				put_info(printf("%s<url>探索不到</url>更多信息,你可以<url>直接进入</url>航海见识探索[<match>%s</match>]", [prefix, text])); //发绿？
 
-				work_results.push({
+				results.push({
 					content: "nothing i got", //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
 					description: printf("<dim>探索不到</dim>\t   关于<url>%s</url>我即便深入探索也<url>啥都没发现</url>,试试<url>[模糊*]</url>替换字符?", text) //这是描述
 				});
@@ -343,7 +343,7 @@ function get_search_text(text, edit_type, work_results, callback, lastsearch) {
 				put_info(printf("这是深入探索[<url>%s</url>]获得的发现...%s", [text, page_info])); //发绿？
 			}
 			/* 这种假常量的意义看起来就是让传入的变量好识别一些 */
-			callback(work_results, I_FORM_SEARCH_TEXT); //回调回去
+			callback(results, I_FORM_SEARCH_TEXT); //回调回去
 			return true; //回调函数的返回只能起个截止作用-不再往下面工作
 		}
 
