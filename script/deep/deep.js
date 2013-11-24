@@ -572,7 +572,7 @@ function slboat_getrecently(edit_type, callback) {
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=recentchanges&format=json&rctype=edit%7Cnew";
 	//获得最后一次操作，可能丢失最新的
 	req_url += "&rctoponly"; //重复的话只要一个
-	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES; //名字空间
+	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES +"|8"; //名字空间,加上了mediawiki系统的内容
 	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
 	/* 处理翻页的玩意们 */
 	var st_look = 0; //开始寻找的个数
