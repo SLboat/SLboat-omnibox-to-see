@@ -269,7 +269,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
 		prefix = "混合入口处<url>(从标题开始)</url>...";
 		page_info = printf("当前探索到%s", prefix);
-	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
+	} else if (pages == 2 ) { //第一页可能包含标题，第二页是纯粹的内容
 		if (edit_type.onlytitle) {
 			prefix = "标题入口处<url>(远离内容)</url>...";
 		} else {
@@ -286,8 +286,13 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	put_info(printf("正在深入探索%s....[<match>%s</match>]", [whoiam, text])); //发绿？
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
-	if (pages > 2) { //第二页开始切换
-		req_url += "&sroffset=" + (pages - 2) * 5; //搜索页数，每页五项
+	//想法: 也许根本没必要在这里筛选,而是结果里,那样的好处就是,不必为分页进行操心了..
+	if (pages >= 2) { //第二页开始切换
+		var pages_st = (pages - 2) * 5; //临时的页面起始
+		if (edit_type.onlytitle) {
+			pages_st += 5;
+		};
+		req_url += "&sroffset=" + pages_st; //搜索页数，每页五项
 	};
 
 	req_url += "&srsearch=" + encodeURIComponent(LOOK_FOR_TEXT); //最终构造完毕
