@@ -32,7 +32,7 @@ var suffix_edit_ime = "＋"; //前缀编辑模式，全角模式，todo
 var suffix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依赖于前者
 var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
-var suffix_search_fulltext = "-"; //仅搜索全部文本
+var suffix_search_justitle = ","; //仅搜索标题(如果需要彻底的内容,用[.]的第二页)
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
 var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
 var prefix_edit_watchlist_raw = "=wr"; //原始格式的监视列表
@@ -52,7 +52,7 @@ function edit_chk(text) { //检查编辑模式
 		isnewtab: false, //新标签页
 		newtext: text, //新的文字-传入给搜索
 		isfind: false, //搜索模式
-		onlytxt: false, //只搜索内容
+		onlytitle: false, //只搜索标题
 		iscopy: false, //需要复制
 		ishelp: false, //需要帮助
 		Srpages: 1, //页数1，第一页开始
@@ -70,8 +70,7 @@ function edit_chk(text) { //检查编辑模式
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
 		edit_type.newtext = str_getlast(text, suffix_help.length).str; //返回剩余的一部分
-	} else
-	if (text.length == 0 || text == ".last" || text == "最近") //最近见识
+	} else if (text.length == 0 || text == ".last" || text == "最近") //最近见识
 		edit_type.islast = true; //设置标记
 	else if (str_chklast(text, suffix_copy)) { //当前标签编辑
 		edit_type.iscopy = true; //设置标记
@@ -95,14 +94,17 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
 		if (edit_type.newtext.length == 0) {
 			edit_type.islast = true; //空空的...
-		}
-	} else if (str_chklast(text, suffix_search_fulltext)) { //仅搜索内容
-		edit_type.newtext = str_getlast(text, suffix_search_fulltext.length).str; //切除
+		};
+		edit_type.onlytitle = false; //强制再次关闭标题
+	} else if (str_chklast(text, suffix_search_justitle)) { //仅仅搜索标题
+		//切割获得次数
+		edit_type.Srpages = str_getlastbytimes(text, suffix_search_justitle).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, suffix_search_justitle).str; //切除
 		if (edit_type.newtext.length == 0) { //如果什么内容也没有,那何必全部检索..?
 			edit_type.islast = true;
 		} else { //或许不该吞掉..
 			edit_type.isfind = true; //寻找模式
-			edit_type.onlytxt = true; //紧紧全文		
+			edit_type.onlytitle = true; //开启仅仅标题		
 		}
 	} else if (str_chkfirst(text, prefix_edit_watchlist) || str_chkfirst(text, prefix_edit_watchlist_raw)) //监视列表在这里
 	{
@@ -235,6 +237,8 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	var page_info = ""; //页面信息
 	var pages = edit_type.Srpages; //页数，1开始
 	var has_next_page = false; //没有下一页
+	var whoiam = edit_type.onlytitle ? "<dim>^标题^</dim>" : "<dim>^内容^</dim>"; //我是文字还是标题
+	var Only_Search_By_Title = true; //只搜索标题
 	var LOOK_FOR_TEXT = text; //搜索内容
 	var I_FORM_SEARCH_TEXT = true; //作为常量好了
 	var text_namespace = slboat_namespace_take(text, true); //本地工作的特别名称
@@ -243,39 +247,43 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 
 	//超过一页，不搜索标题先了
 	if (pages > 1) {
-		search_text = true;
-	} else {
-		//进行必要的搜索反转
-		if (!lastsearch) {
-			//非最后一次搜索，原始一样
-			search_text = edit_type.onlytxt;
-		} else {
-			search_text = !edit_type.onlytxt;
+		Only_Search_By_Title = edit_type.onlytitle; //仅仅标题的强制性开关
+	} else { //位于搜索的第一页,可能出现内容不足.
+		if (!lastsearch) { //位于搜索的第一页,第一遍检索
+			Only_Search_By_Title = true;
+		} else { //位于搜索的第一页,第一遍结果不足,进行第二遍补充
+			Only_Search_By_Title = false;
 		} //反转搜索
 	};
 
-	if (search_text) {
-		strwhat = "text";
-		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
-	} else {
+	if (Only_Search_By_Title) {
 		strwhat = "title"; //标题好的
 		LOOK_FOR_TEXT = slboat_namespace_take(text); //临时寄存文本内容
+		// 这里可能有复合意,有时候是标题也有内容也有...提醒的并不充实..
 		near_str = "\t  <url>--></url><dim>见识接近标题:</dim>";
+	} else {
+		strwhat = "text";
+		near_str = "\t  <url>--></url><dim>见识接近内容:</dim>";
 	};
 
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
-		prefix = "所有入口处<url>(也探索标题)</url>...";
+		prefix = "混合入口处<url>(从标题开始)</url>...";
 		page_info = printf("当前探索到%s", prefix);
 	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
-		prefix = "内容入口处<url>(不探索标题)</url>...";
+		if (edit_type.onlytitle) {
+			prefix = "标题入口处<url>(远离内容)</url>...";
+		} else {
+			prefix = "内容入口处<url>(远离标题)</url>...";
+		};
 		page_info = printf("当前探索到%s", prefix);
 	} else {
+		page_info = printf("当前探索到%s第%s页", [whoiam, pages - 1]);
+
 		//页数减少一，这里的页数真是太混乱了
-		page_info = "当前探索到第" + (pages - 1) + "页";
 		prefix = "深入的<url>第" + (pages - 1) + "页</url>...";
 	};
 
-	put_info("正在深入探索....[<match>" + text + "</match>]"); //发绿？
+	put_info(printf("正在深入探索%s....[<match>%s</match>]", [whoiam, text])); //发绿？
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
 	if (pages > 2) { //第二页开始切换
@@ -317,7 +325,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 				desc_title = ominibox_package_desc_title(title_get); //搜索模式封装，它是单独的
 			};
 			//hoho,亮一亮,灯点亮...
-			var match_str = ominibox_get_highline_forall(title_get, text);
+			var match_str = ominibox_get_highline_forall(title_get, text, "url");
 			//push入数据，它是个数组，实际上
 			results.push({
 				content: title_get, //这是发送给输入事件的数据，如果和输入一样，不会被送入，看起来就是新的建议啥的
@@ -507,7 +515,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		for (var index = 0; index < result_arry.length; index++) { //处理第一项
 			var title_get = result_arry[index];
 			var should_get = title_get; //将调查的数据
-			var match_str = ominibox_get_highline_forall(title_get, text); //匹配标题
+			var match_str = ominibox_get_highline_forall(title_get, text, "match"); //匹配标题
 			var def_show_info = match_str + "\t       <dim>-->"; //默认标题信息
 			var show_info = def_show_info; //探索进一步的信息串
 			//todo，匹配信息
@@ -572,7 +580,7 @@ function slboat_getrecently(edit_type, callback) {
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=recentchanges&format=json&rctype=edit%7Cnew";
 	//获得最后一次操作，可能丢失最新的
 	req_url += "&rctoponly"; //重复的话只要一个
-	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES +"|8"; //名字空间,加上了mediawiki系统的内容
+	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES + "|8"; //名字空间,加上了mediawiki系统的内容
 	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
 	/* 处理翻页的玩意们 */
 	var st_look = 0; //开始寻找的个数
@@ -896,6 +904,7 @@ function chrome_had_load() {
 
 /* 最无用的家伙
  * 显示一些帮助
+ * todo:显示多页帮助...一页五个...
  */
 
 function get_help(callback) {
@@ -915,7 +924,7 @@ function get_help(callback) {
 	//搜索模式
 	results.push({
 		content: "搜索模式.?", //更细致的？哦不。。
-		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + suffix_search + "]</url>:从标题搜向文本,兼容全角\t   \t<url>[(见识标题)" + suffix_search_fulltext + "]</url>:仅仅搜索见识正文"
+		description: "<dim>搜索模式</dim>    <url>[(见识标题)" + suffix_search + "]</url>:从标题搜向文本,兼容全角\t   \t<url>[(见识标题)" + suffix_search_justitle + "]</url>:仅仅搜索见识标题"
 	});
 	//搜索模式
 	results.push({

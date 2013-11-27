@@ -118,21 +118,23 @@ function slboat_replace_namespace(text, ns_namespace) {
  * 传回匹配串
  */
 
-function ominibox_get_highline(title_get, text) {
+function ominibox_get_highline(title_get, text, which_tag) {
 	//制造高亮玩意
+	which_tag = which_tag || "match"; //哪种标记封装,默认是match
 	var text_re = new RegExp(text, "i");
-	var match_part = title_get.match(text_re);
-	var match_str = title_get.replace(match_part, "<match>" + match_part + "</match>"); //高亮有的话，被处理了大小写
+	var match_part = title_get.match(text_re); //预测: 看起来只替换了一个
+	var match_str = title_get.replace(match_part, printf("<%s>%s</%s>", [which_tag, match_part, which_tag])); //高亮有的话，被处理了大小写
 	return match_str;
 }
 
 /* 高亮匹配所有内容-切除空格部分进行每一部分的匹配 */
 
-function ominibox_get_highline_forall(title_get, text) {
+function ominibox_get_highline_forall(title_get, text, which_tag) {
 	var split_arr = text.split(/ +/); //切割空格
+	which_tag = which_tag || "match"; //哪种标记封装,默认是match
 	for (var i = 0; i < split_arr.length; i++) {
 		/* 一直咬自己尾巴,直到没有尾巴,尾巴用空格做成 */
-		title_get = ominibox_get_highline(title_get, split_arr[i]);
+		title_get = ominibox_get_highline(title_get, split_arr[i], which_tag);
 	};
 	return title_get;
 }
