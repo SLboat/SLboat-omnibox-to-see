@@ -597,9 +597,9 @@ function slboat_getrecently(edit_type, callback) {
 	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES + "|8"; //名字空间,加上了mediawiki系统的内容
 	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
 	/* 处理翻页的玩意们 */
-	var st_look = 0; //开始寻找的个数
-	if (edit_type.isfind) { //如果是翻页模式...
-		st_look = (edit_type.Srpages) * 5; //根据着页来探索...
+	var st_look = 0; //起始索引→索引的开始
+	if (edit_type.isfind) { //
+		st_look = edit_type.Srpages * 5; //根据着页来探索...
 	};
 	if (edit_type.isfind) { //如果是需要多页的玩意...
 		put_info(printf("正在深入探索<url>[最近]</url>见识,这是第[%s]页,[.]去往下一页:", [edit_type.Srpages + 1]));
@@ -608,7 +608,7 @@ function slboat_getrecently(edit_type, callback) {
 		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>的最新见识,[.]去往下一页：");
 	};
 	//仅获得多少个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	req_url += "&rclimit=" + (st_look + 5); //需要几个结果,将来截取
+	req_url += "&rclimit=" + (st_look + 6); //需要几个结果,将来截取
 
 	//如何移出去呢->也许在这里就很好了嘛
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -666,16 +666,16 @@ function slboat_getwatchlist(text, edit_type, callback) {
 		req_url += "&list=watchlist"; //初步url构建
 	};
 	/* 处理翻页的玩意们 */
-	var st_look = 0; //开始寻找的个数
+	var st_look = 1; //开始寻找的个数,这是显示个数,唯一的问题就是数组的问题了
 	if (edit_type.isfind) { //如果是翻页模式...
-		st_look = (edit_type.Srpages - 1) * 5; //根据着页来探索...保持有下一页的信息
+		st_look = edit_type.Srpages * 5; //根据着页来探索...保持有下一页的信息
 	};
 	if (edit_type.isfind) { //如果是需要多页的玩意...
-		put_info(printf("正在观察<url>[监视列表]</url>,这是第[%s]页(%s-%s):", [edit_type.Srpages, st_look, st_look + 5]));
+		put_info(printf("正在观察<url>[监视列表]</url>,这是第[%s]页:", [edit_type.Srpages + 1]));
 	} else {
 		put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
 	};
-	req_url += "&wrlimt=" + (st_look + 1); //需要几个结果,将来截取
+	req_url += "&wllimt=" + (st_look + 5); //仅仅比需要的多一个就够了
 
 	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -701,17 +701,17 @@ function slboat_getwatchlist(text, edit_type, callback) {
 			return false; //无效退出
 		}
 		if (result_arry.length > st_look) {
-			put_info(printf("正在观察<url>[监视列表]</url>,这是[%s]页(%s-%s)...还有下一页!", [edit_type.Srpages, st_look, st_look + 5]));
+			put_info(printf("探索到了<url>[监视列表]</url>,这是第[%s]页,[.]去往下一页,船长!", [edit_type.Srpages + 1]));
 		} else {
-			put_info(printf("啊哈!探索到了!我不幸的探索到只有%s个<url>监视列表</url>变动:", [result_arry.length])); //提醒文字
-		}
+			put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,这是最后页,船长!", [st_look + result_arry.length])); //提醒文字
+		};
 		//这是每一个结果的处置
-		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
+		for (var index = st_look - 1; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
 			var title_get = result_arry[index].title //处理这个玩意
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: printf("%s\t       <dim>->监视列表</dim><url>[%s]</url>", [title_get, index]) //这是描述
+				description: printf("%s\t       <dim>->监视列表</dim><url>[%s]</url>", [title_get, index + 1]), //这是描述,序号总是会增加1
 			});
 		}
 		callback(results); //提交结果，完事
