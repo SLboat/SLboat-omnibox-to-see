@@ -151,7 +151,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 	var suggest = function(results) {
 		var final_results = obj_clone(results); //克隆一份,嘿嘿
 		//处理寻找模式不需要
-		if (!edit_type.isfind || edit_type.islast) {
+		if (!edit_type.isfind || edit_type.islast || edit_type.iswatch || edit_type.iswatchraw) {
 			fonts_fix_load(); //载入字体设置-如果修改了
 			if (fonts_fix.iswork()) //如果在工作的话
 			{
@@ -599,7 +599,7 @@ function slboat_getrecently(edit_type, callback) {
 	//获得最后一次操作，可能丢失最新的
 	req_url += "&rctoponly"; //重复的话只要一个
 	req_url += "&rcnamespace=" + WORK_FOR_NAMESPACES + "|8"; //名字空间,加上了mediawiki系统的内容
-	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
+	req_url += "&rcprop=comment%7Ctitle%7Ctimestamp"; //包含属性...
 	/* 处理翻页的玩意们 */
 	var st_look = 0; //起始索引→索引的开始
 	if (edit_type.isfind) { //
@@ -625,11 +625,13 @@ function slboat_getrecently(edit_type, callback) {
 		//这是每一个结果的处置
 		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //只提取5个
 			var title_get = result_arry[index].title; //标题
+			var timestamp = result_arry[index].timestamp;
 			var type_str = result_arry[index].type; //类型			
 			var comment_str = result_arry[index].comment; //注释内容
 			if (comment_str.length > 0) { //前置点玩意
 				comment_str = ": " + ecsape_all_xmlstr(comment_str); //注释特殊字符
 			};
+			var datestr = " <dim>←" + getDateDiff(timestamp) + "前变革</dim>";
 			switch (type_str) { //重新命名编辑方式
 				case "new":
 					type_str = "新建";
@@ -642,7 +644,7 @@ function slboat_getrecently(edit_type, callback) {
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: printf("%s\t       <dim>->最近%s见识</dim><url>[%s]</url>%s", [title_get, type_str, index + 1, comment_str]) //这是描述
+				description: printf("%s\t       <dim>->最近%s见识</dim><url>[%s]</url>%s%s", [title_get, type_str, index + 1, comment_str, datestr]) //这是描述
 			});
 		}
 		callback(results); //提交结果，完事
@@ -656,20 +658,24 @@ function slboat_getrecently(edit_type, callback) {
 //todo: 复用代码,太多重复的和最近见识了
 
 function slboat_getwatchlist(text, edit_type, callback) {
-	perfix_tips = "";
-
+	var perfix_tips = "";
+	var which_watch = "监视列表"; //哪一类监视列表
+	var limit_url_str = "wllimit"; //限制标记,默认是非原始
 	if (text.length > 0) {
 		//有一些别的玩意
 		perfix_tips = ",探索监视列表不需要带别的";
 	};
 
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&format=json";
-	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
 
 	if (edit_type.iswatchraw) { //raw模式
+		which_watch = "原始监视列表";
 		req_url += "&list=watchlistraw"; //raw模式
-		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
+		limit_url_str = "wrlimit"; //raw模式的限制
+		//req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
+
 	} else {
+		req_url += "&wlprop=comment%7Ctitle%7Ctimestamp"; //包含属性...
 		req_url += "&list=watchlist"; //初步url构建
 	};
 
@@ -680,12 +686,12 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	};
 
 	if (edit_type.isfind) { //如果是需要多页的玩意...
-		put_info(printf("正在观察<url>[监视列表]</url>...这是第[%s]页:", [edit_type.Srpages + 1]));
+		put_info(printf("正在观察<url>[%s]</url>...这是第[%s]页:", [which_watch, edit_type.Srpages + 1]));
 	} else { //第一页之外开始检索...
-		put_info("正在探索监视列表...按下直接进入<url>监视列表</url>,[.]探索下一页" + perfix_tips); //提醒文字
+		put_info(printf("正在探索监视列表...按下直接进入<url>%s</url>,[.]探索下一页%s", [which_watch, perfix_tips])); //提醒文字
 	};
 
-	req_url += "&wllimit=" + (st_look + 6); //仅仅比需要的多一个就够了
+	req_url += printf("&%s=%s", [limit_url_str, (st_look + 6)]); //仅仅比需要的多一个就够了
 
 	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -699,7 +705,7 @@ function slboat_getwatchlist(text, edit_type, callback) {
 			} else {
 				error_info = printf("我想可能是因为: %s", [data.error.info]); //获得了错误信息
 			};
-			put_info(printf("探索<url>监视列表</url>的时候发生意外 %s", [error_info])); //印出错误信息
+			put_info(printf("探索<url>%s</url>的时候发生意外 %s", [which_watch, error_info])); //印出错误信息
 			return false; //再见离开
 		};
 
@@ -712,26 +718,41 @@ function slboat_getwatchlist(text, edit_type, callback) {
 		if (typeof(result_arry) == "undefined") {
 			return false; //无效退出
 		};
-
-		if (edit_type.Srpages > 1) { //第一页外面的话处理
+		if (edit_type.isfind) { //第一页外面的话处理
 			if (result_arry.length > st_look + 5) {
-				put_info(printf("探索到了<url>[监视列表]</url>,这是第[%s]页,[.]去往下一页,船长!", [edit_type.Srpages + 1]));
+				put_info(printf("探索到了<url>[%s]</url>,这是第[%s]页,[.]去往下一页,船长!", [which_watch, edit_type.Srpages + 1]));
 			} else {
 				if (result_arry.length > st_look) {
-					put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,想必是最后页,船长!", [edit_type.Srpages + 1])); //提醒文字
+					put_info(printf("探索到了<url>[%s]</url>!这是第[%s]页,想必是最后页,船长!", [which_watch, edit_type.Srpages + 1])); //提醒文字
 				} else {
-					put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,已超越最后页,船长!", [edit_type.Srpages + 1])); //提醒文字
+					put_info(printf("探索到了<url>[%s]</url>!这是第[%s]页,已超越最后页,船长!", [which_watch, edit_type.Srpages + 1])); //提醒文字
+					results.push({
+						content: "找不到了...",
+						description: ("<dim>找了找,但是啥也找不到了,船长....</dim>")
+					});
 				};
 			};
 		};
 
 		//这是每一个结果的处置
 		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
-			var title_get = result_arry[index].title //处理这个玩意
+			var title_get = result_arry[index].title; //处理这个玩意
+			var timestamp = ""; //默认空,考虑到啥子-原始格式
+			var comment_str = "";
+			var datestr = "";
+			if (!edit_type.iswatchraw) {
+				timestamp = result_arry[index].timestamp;
+				comment_str = result_arry[index].comment; //注释内容
+				if (comment_str.length > 0) { //前置点玩意
+					comment_str = ": " + ecsape_all_xmlstr(comment_str); //注释特殊字符
+				};
+				datestr = " <dim>←" + getDateDiff(timestamp) + "前变革</dim>";
+
+			};
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: printf("%s\t       <dim>->监视列表</dim><url>[%s]</url>", [title_get, index + 1]), //这是描述,序号总是会增加1
+				description: printf("%s\t       <dim>->%s</dim><url>[%s]</url>%s%s", [title_get, which_watch, index + 1, comment_str, datestr]), //这是描述,序号总是会增加1
 			});
 		};
 		callback(results); //提交结果，完事
