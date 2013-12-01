@@ -33,6 +33,7 @@ var suffix_edit_newtab = "++"; //前缀编辑模式、新窗口，它似乎依�
 var suffix_edit_newtab_oldway = "+n"; //前缀编辑模式、新窗口，它似乎依赖于前者，备用方式
 var suffix_search = "."; //从标题到达文本，如果回退到.那么又是继续搜索，锁定使用
 var suffix_search_justitle = ","; //仅搜索标题(如果需要彻底的内容,用[.]的第二页)
+var suffix_enter_me = ">"; //只是输入我,到见识编辑页面,如果存在的话
 //=号协定，意味着等于某些东西，不能搜索它是的，至少不能开头
 var prefix_edit_watchlist = "=w"; //查看监视列表，需要空格开头的w，而且仅仅是w
 var prefix_edit_watchlist_raw = "=wr"; //原始格式的监视列表
@@ -57,7 +58,8 @@ function edit_chk(text) { //检查编辑模式
 		ishelp: false, //需要帮助
 		Srpages: 1, //页数1，第一页开始
 		iswatch: false, //最近的监视列表
-		iswatchraw: false //原始raw列表
+		iswatchraw: false, //原始raw列表
+		isenter: false, //只输入见识页面
 	}; //返回构造
 
 	//全局替换句号为点号，或许只处理最后几个字符就好了？
@@ -67,12 +69,30 @@ function edit_chk(text) { //检查编辑模式
 	text = slboat_replace_namespace(text, "想法");
 	text = slboat_replace_namespace(text, "短英语");
 
+	/* 先处理特殊的搜索参量增加,让它在这里 */
+	if (str_chklast(text, suffix_search)) { //搜索内容
+		//todo:兼并联合，不需要两次
+		edit_type.isfind = true; //单独的标记
+		//切割获得次数
+		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
+		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
+		/* 额外的检查奇怪的附加模式 */
+		text = edit_type.newtext; //强制性的替换原始文字
+		edit_type.onlytitle = false; //强制再次关闭标题
+	};
+
+	/* 输入模式生成输入模式 */
+	if (str_chklast(text, suffix_enter_me)) { //如果只是输入模式
+		edit_type.isenter = true;
+		edit_type.newtext = str_getlast(suffix_enter_me.length).str;
+	};
+
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
 		edit_type.ishelp = true;
 		edit_type.newtext = str_getlast(text, suffix_help.length).str; //返回剩余的一部分
-	} else if (text.length == 0 || text == ".last" || text == "最近") //最近见识
+	} else if (text.length == 0 || text == ".last" || text == "最近") { //最近见识
 		edit_type.islast = true; //设置标记
-	else if (str_chklast(text, suffix_copy)) { //当前标签编辑
+	} else if (str_chklast(text, suffix_copy)) { //当前标签编辑
 		edit_type.iscopy = true; //设置标记
 		edit_type.newtext = str_getlast(text, suffix_copy.length).str; //返回剩余的一部分
 	} else if (str_chklast(text, suffix_edit_newtab)) { //不优先可能发生坏事，比如[++]小于[+]
@@ -86,16 +106,6 @@ function edit_chk(text) { //检查编辑模式
 		edit_type.isedit = true; //编辑模式
 		edit_type.isnewtab = true; //单独的标记
 		edit_type.newtext = str_getlast(text, suffix_edit_newtab_oldway.length).str; //切除
-	} else if (str_chklast(text, suffix_search)) { //搜索内容
-		//todo:兼并联合，不需要两次
-		edit_type.isfind = true; //单独的标记
-		//切割获得次数
-		edit_type.Srpages = str_getlastbytimes(text, suffix_search).times; //获得需要的页数，最小是1
-		edit_type.newtext = str_getlastbytimes(text, suffix_search).str; //切除次数外的
-		if (edit_type.newtext.length == 0) {
-			edit_type.islast = true; //空空的...
-		};
-		edit_type.onlytitle = false; //强制再次关闭标题
 	} else if (str_chklast(text, suffix_search_justitle)) { //仅仅搜索标题
 		//切割获得次数
 		edit_type.Srpages = str_getlastbytimes(text, suffix_search_justitle).times; //获得需要的页数，最小是1
@@ -105,20 +115,19 @@ function edit_chk(text) { //检查编辑模式
 		} else { //或许不该吞掉..
 			edit_type.isfind = true; //寻找模式
 			edit_type.onlytitle = true; //开启仅仅标题		
-		}
-	} else if (str_chkfirst(text, prefix_edit_watchlist) || str_chkfirst(text, prefix_edit_watchlist_raw)) //监视列表在这里
-	{
+		};
+	} else if (str_chkfirst(text, prefix_edit_watchlist) || str_chkfirst(text, prefix_edit_watchlist_raw)) { //监视列表在这里
 		if (str_chkfirst(text, prefix_edit_watchlist_raw)) //需要原始列表
 		{
 			edit_type.iswatchraw = true; //原始raw列表
-		}
+		};
 		//如果是"[=w]作为开头
 		edit_type.iswatch = true; //监视列表
 		edit_type.newtext = str_getfirst(text, prefix_edit_watchlist.length).str
-	}
+	};
 
 	return edit_type; //返回构建
-}
+};
 
 /* 输入变动 
  * 这是一切工作的核心
@@ -216,7 +225,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 			};
 			get_suggest(text, edit_type, str_new_win, moreinfo_callback, false, null);
 		}
-	} else { //直接现实最近的
+	} else { //<--最近的列表
 		//todo: [last]也支持如何
 		slboat_getrecently(edit_type, function(results) {
 			suggest(results); //闭包回来处理
@@ -269,7 +278,7 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 	if (pages == 1) { //第一页可能包含标题，第二页是纯粹的内容
 		prefix = "混合入口处<url>(从标题开始)</url>...";
 		page_info = printf("当前探索到%s", prefix);
-	} else if (pages == 2 ) { //第一页可能包含标题，第二页是纯粹的内容
+	} else if (pages == 2) { //第一页可能包含标题，第二页是纯粹的内容
 		if (edit_type.onlytitle) {
 			prefix = "标题入口处<url>(远离内容)</url>...";
 		} else {
@@ -590,18 +599,16 @@ function slboat_getrecently(edit_type, callback) {
 	/* 处理翻页的玩意们 */
 	var st_look = 0; //开始寻找的个数
 	if (edit_type.isfind) { //如果是翻页模式...
-		st_look = (edit_type.Srpages - 1) * 5; //根据着页来探索...
+		st_look = (edit_type.Srpages) * 5; //根据着页来探索...
 	};
 	if (edit_type.isfind) { //如果是需要多页的玩意...
-		put_info(printf("正在深入探索<url>[最近]</url>见识,这是[%s]页(%s-%s):", [edit_type.Srpages, st_look, st_look + 5]));
+		put_info(printf("正在深入探索<url>[最近]</url>见识,这是第[%s]页,[.]去往下一页:", [edit_type.Srpages + 1]));
 		//需要的页数x5
-		limit_need = edit_type.Srpages * 5;
 	} else {
-		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>见识：");
-		limit_need = 5; //默认就要五个好了
+		put_info("输入标题来探索航海见识,而这是<url>[最近]</url>的最新见识,[.]去往下一页：");
 	};
 	//仅获得多少个，因为重复会被过除，所以如果不获得最后一次操作的话，就要多提取几次
-	req_url += "&rclimit=" + limit_need; //需要几个结果,将来截取
+	req_url += "&rclimit=" + (st_look + 5); //需要几个结果,将来截取
 
 	//如何移出去呢->也许在这里就很好了嘛
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -612,7 +619,7 @@ function slboat_getrecently(edit_type, callback) {
 			return false; //无效退出
 		}
 		//这是每一个结果的处置
-		for (var index = st_look; index < st_look + 5; index++) { //只提取5个
+		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //只提取5个
 			var title_get = result_arry[index].title; //标题
 			var type_str = result_arry[index].type; //类型			
 			var comment_str = result_arry[index].comment; //注释内容
@@ -631,36 +638,46 @@ function slboat_getrecently(edit_type, callback) {
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: printf("%s\t       <dim>->最近%s见识</dim><url>[%s]</url>%s", [title_get, type_str, index, comment_str]) //这是描述
+				description: printf("%s\t       <dim>->最近%s见识</dim><url>[%s]</url>%s", [title_get, type_str, index + 1, comment_str]) //这是描述
 			});
 		}
 		callback(results); //提交结果，完事
 	});
-}
+};
 
 /* 获得监视列表
  * 默认进入监视列表查看页
  * 下面就是更多的玩意
  */
-//todo: 下一页探索？
+//todo: 复用代码,太多重复的和最近见识了
 
 function slboat_getwatchlist(text, edit_type, callback) {
-	//* 访问url，默认获取6个，看起来足够了
-	var req_url;
-	if (edit_type.iswatchraw) //raw模式
-	{
-		req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=watchlistraw&format=json&wrlimit=6"; //raw模式
-		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
-	} else {
-		req_url = CONFIG_SITE_URL + "/w/api.php?action=query&list=watchlist&format=json&wllimit=6"; //初步url构建
-	}
-	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	perfix_tips = "";
 	if (text.length > 0) {
 		//有一些别的玩意
 		perfix_tips = ",探索监视列表不需要带别的";
-	}
-	put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
+	};
+	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&format=json";
+	if (edit_type.iswatchraw) //raw模式
+	{
+		req_url += "&list=watchlistraw"; //raw模式
+		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
+	} else {
+		req_url += "&list=watchlist"; //初步url构建
+	};
+	/* 处理翻页的玩意们 */
+	var st_look = 0; //开始寻找的个数
+	if (edit_type.isfind) { //如果是翻页模式...
+		st_look = (edit_type.Srpages - 1) * 5; //根据着页来探索...保持有下一页的信息
+	};
+	if (edit_type.isfind) { //如果是需要多页的玩意...
+		put_info(printf("正在观察<url>[监视列表]</url>,这是第[%s]页(%s-%s):", [edit_type.Srpages, st_look, st_look + 5]));
+	} else {
+		put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
+	};
+	req_url += "&wrlimt=" + (st_look + 1); //需要几个结果,将来截取
+
+	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
 		var results = [];
 		var result_arry; //结果字串
@@ -683,18 +700,18 @@ function slboat_getwatchlist(text, edit_type, callback) {
 		if (typeof(result_arry) == "undefined") {
 			return false; //无效退出
 		}
-		if (result_arry.length > 5) {
-			put_info("哇喔!我不幸的探索到很多<url>监视列表</url>....这里是一些最近的玩意:"); //提醒文字
+		if (result_arry.length > st_look) {
+			put_info(printf("正在观察<url>[监视列表]</url>,这是[%s]页(%s-%s)...还有下一页!", [edit_type.Srpages, st_look, st_look + 5]));
 		} else {
 			put_info(printf("啊哈!探索到了!我不幸的探索到只有%s个<url>监视列表</url>变动:", [result_arry.length])); //提醒文字
 		}
 		//这是每一个结果的处置
-		for (var index = 0; index < result_arry.length; index++) { //处理第一项
+		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
 			var title_get = result_arry[index].title //处理这个玩意
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
-				description: title_get + "\t       <dim>->监视列表里的变化</dim><url>[" + index + "]</url>" //这是描述
+				description: printf("%s\t       <dim>->监视列表</dim><url>[%s]</url>", [title_get, index]) //这是描述
 			});
 		}
 		callback(results); //提交结果，完事
@@ -811,6 +828,10 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 	text = edit_type.newtext; //文字也处理了
 	var edit_link = CONFIG_SITE_URL + "/w/index.php?action=edit&editintro=" +
 		encodeURIComponent(tips_title) + "&title=";
+	/* 只是输入模式的话 */
+	if (edit_type.isenter) {
+		return false;
+	};
 	//处理新窗口
 	if (edit_type.islast) {
 		tab_go(CONFIG_SITE_URL + "/wiki/特殊:最近更改") //进入最近更改
