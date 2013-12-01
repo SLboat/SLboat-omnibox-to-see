@@ -19,7 +19,8 @@ function str_chklast(text, last) {
  * result.last: 最后字符
  * result.str: 切除尾巴后的字符
  */
-//todo: 根据文本数组来一个个匹配一个包含一致，并且给出切割后的
+//TODO: 根据文本数组来一个个匹配一个包含一致，并且给出切割后的
+//TODO: 根据传入的是数字或者字符串来决定它的行为,数字位length,字符串则是原生长度
 
 function str_getlast(text, how_long) {
 	var how_long = how_long || 1; //默认值
@@ -387,6 +388,107 @@ function printf(str, subs) {
 	} while (s.length > 0);
 	return ret.join('');
 }
+
+/* 获得时间戳的日期差异 */
+function getDateDiff(timestamp) {
+	/* 由MW的时间戳好哦的日期,来自Gadget-Navigation popups */
+	function getDateFromTimestamp(t) {
+		var s = t.split(/[^0-9]/);
+		switch (s.length) {
+			case 0:
+				return null;
+			case 1:
+				return new Date(s[0]);
+			case 2:
+				return new Date(s[0], s[1] - 1);
+			case 3:
+				return new Date(s[0], s[1] - 1, s[2]);
+			case 4:
+				return new Date(s[0], s[1] - 1, s[2], s[3]);
+			case 5:
+				return new Date(s[0], s[1] - 1, s[2], s[3], s[4]);
+			case 6:
+				return new Date(s[0], s[1] - 1, s[2], s[3], s[4], s[5]);
+			default:
+				return new Date(s[0], s[1] - 1, s[2], s[3], s[4], s[5], s[6]);
+		};
+	};
+
+	/* 添加单位,来自Gadget-Navigation popups */
+	function addunit(num, str) {
+		var datestr = {
+			'day': '天',
+			'days': '天',
+			'hour': '小时',
+			'hours': '小时',
+			'minute': '分钟',
+			'minutes': '分钟',
+			'second': '秒',
+			'seconds': '秒',
+			'week': '周',
+			'weeks': '周',
+		};
+		var blank_str = ''; //错开字符,"xx分[ ]xx秒"
+		return '' + num + blank_str + ((num != 1) ? datestr[str + 's'] : datestr[str]);
+	}
+
+	/* 格式化日期,来自Gadget-Navigation popups
+	 * 格式化毫秒(时间戳差值)为人可读的玩意 */
+	function formatAge(age) {
+		var blank_str = "";
+		// coerce into a number
+		var a = 0 + age,
+			aa = a;
+
+		var seclen = 1000;
+		var minlen = 60 * seclen;
+		var hourlen = 60 * minlen;
+		var daylen = 24 * hourlen;
+		var weeklen = 7 * daylen;
+
+		var numweeks = (a - a % weeklen) / weeklen;
+		a = a - numweeks * weeklen;
+		var sweeks = addunit(numweeks, 'week');
+		var numdays = (a - a % daylen) / daylen;
+		a = a - numdays * daylen;
+		var sdays = addunit(numdays, 'day');
+		var numhours = (a - a % hourlen) / hourlen;
+		a = a - numhours * hourlen;
+		var shours = addunit(numhours, 'hour');
+		var nummins = (a - a % minlen) / minlen;
+		a = a - nummins * minlen;
+		var smins = addunit(nummins, 'minute');
+		var numsecs = (a - a % seclen) / seclen;
+		a = a - numsecs * seclen;
+		var ssecs = addunit(numsecs, 'second');
+
+		if (aa > 4 * weeklen) {
+			return sweeks;
+		}
+		if (aa > weeklen) {
+			return sweeks + blank_str + sdays;
+		}
+		if (aa > daylen) {
+			return sdays + blank_str + shours;
+		}
+		if (aa > 6 * hourlen) {
+			return shours;
+		}
+		if (aa > hourlen) {
+			return shours + blank_str + smins;
+		}
+		if (aa > 10 * minlen) {
+			return smins;
+		}
+		if (aa > minlen) {
+			return smins + blank_str + ssecs;
+		}
+		return ssecs;
+	};
+
+	var age = new Date().getTime() - getDateFromTimestamp(timestamp);
+	return formatAge(age); //返回字符串
+};
 
 /* 重定向的工厂，为了同时载入 放在这里寄放，这里就像个地点 */
 
