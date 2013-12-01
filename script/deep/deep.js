@@ -84,6 +84,7 @@ function edit_chk(text) { //检查编辑模式
 	/* 输入模式生成输入模式 */
 	if (str_chklast(text, suffix_enter_me)) { //如果只是输入模式
 		edit_type.isenter = true;
+		//对于最终输出,要给所有的玩意赋值回去这个呢
 		edit_type.newtext = str_getlast(suffix_enter_me.length).str;
 	};
 
