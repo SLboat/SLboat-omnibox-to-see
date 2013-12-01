@@ -79,13 +79,11 @@ function edit_chk(text) { //检查编辑模式
 		/* 额外的检查奇怪的附加模式 */
 		text = edit_type.newtext; //强制性的替换原始文字
 		edit_type.onlytitle = false; //强制再次关闭标题
-	};
-
-	/* 输入模式生成输入模式 */
-	if (str_chklast(text, suffix_enter_me)) { //如果只是输入模式
+	} else if (str_chklast(text, suffix_enter_me)) { /* 输入模式生成输入模式,这里不和别的模式冲突 */
 		edit_type.isenter = true;
 		//对于最终输出,要给所有的玩意赋值回去这个呢
-		edit_type.newtext = str_getlast(suffix_enter_me.length).str;
+		edit_type.newtext = str_getlast(text, suffix_enter_me.length).str;
+		text = edit_type.newtext; //重新整理赋值
 	};
 
 	if (str_chklast(text, suffix_help)) { //当前标签编辑
@@ -161,6 +159,12 @@ chrome.omnibox.onInputChanged.addListener(function(text, send_suggest) {
 		};
 		//处理掉干扰xml字串，看起来是最后的了
 		final_results = ominibox_ecsape_xmlstr_results(final_results);
+		//TODO:分离给单独处理的家伙
+		if (edit_type.isenter) { //进入模式,全部替换
+			for (var result in final_results) {
+				final_results[result].content += suffix_enter_me; //每个插入输入标记
+			};
+		};
 		//传出结果
 		send_suggest(final_results);
 	};
