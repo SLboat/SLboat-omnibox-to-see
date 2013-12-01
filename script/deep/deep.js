@@ -120,6 +120,7 @@ function edit_chk(text) { //检查编辑模式
 		if (str_chkfirst(text, prefix_edit_watchlist_raw)) //需要原始列表
 		{
 			edit_type.iswatchraw = true; //原始raw列表
+			edit_type.newtext = str_getfirst(text, prefix_edit_watchlist_raw.length).str; //切除
 		};
 		//如果是"[=w]作为开头
 		edit_type.iswatch = true; //监视列表
@@ -656,13 +657,16 @@ function slboat_getrecently(edit_type, callback) {
 
 function slboat_getwatchlist(text, edit_type, callback) {
 	perfix_tips = "";
+
 	if (text.length > 0) {
 		//有一些别的玩意
 		perfix_tips = ",探索监视列表不需要带别的";
 	};
+
 	var req_url = CONFIG_SITE_URL + "/w/api.php?action=query&format=json";
-	if (edit_type.iswatchraw) //raw模式
-	{
+	req_url += "&rcprop=comment%7Ctitle"; //包含属性...
+
+	if (edit_type.iswatchraw) { //raw模式
 		req_url += "&list=watchlistraw"; //raw模式
 		req_url += "&wrnamespace=0%7C2%7C4%7C6%7C8%7C10%7C12%7C14%7C274%7C1198%7C666"; //屏蔽所有讨论命名空间，暂时的不需要它
 	} else {
@@ -676,12 +680,12 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	};
 
 	if (edit_type.isfind) { //如果是需要多页的玩意...
-		put_info(printf("正在观察<url>[监视列表]</url>,这是第[%s]页:", [edit_type.Srpages + 1]));
+		put_info(printf("正在观察<url>[监视列表]</url>...这是第[%s]页:", [edit_type.Srpages + 1]));
 	} else { //第一页之外开始检索...
-		put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
+		put_info("正在探索监视列表...按下直接进入<url>监视列表</url>,[.]探索下一页" + perfix_tips); //提醒文字
 	};
 
-	req_url += "&wllimit=" + (st_look + 5); //仅仅比需要的多一个就够了
+	req_url += "&wllimit=" + (st_look + 6); //仅仅比需要的多一个就够了
 
 	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -713,7 +717,11 @@ function slboat_getwatchlist(text, edit_type, callback) {
 			if (result_arry.length > st_look + 5) {
 				put_info(printf("探索到了<url>[监视列表]</url>,这是第[%s]页,[.]去往下一页,船长!", [edit_type.Srpages + 1]));
 			} else {
-				put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,这是最后页,船长!", [st_look])); //提醒文字
+				if (result_arry.length > st_look) {
+					put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,想必是最后页,船长!", [edit_type.Srpages + 1])); //提醒文字
+				} else {
+					put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,已超越最后页,船长!", [edit_type.Srpages + 1])); //提醒文字
+				};
 			};
 		};
 
