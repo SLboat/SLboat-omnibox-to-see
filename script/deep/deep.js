@@ -555,15 +555,18 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 			if (issth(titles_arr[should_get]) && titles_arr[should_get].kat != "") //拥有一些玩意
 			{
 				show_info += "见识位于分类<url>" + titles_arr[should_get].kat + "</url>";
-			}
+			};
+
 			if (show_info == def_show_info) { //没有探索到
 				show_info += "存在于在航海见识\t但是看起来没有<url>被分类</url>" //这是描述
-			}
+			};
+
 			show_info += "</dim>"; //匹配结束
 			if (title_get == text) { //完全一样会不显示
 				title_get += "_"; //加一个无关紧要的进去
 				show_info += "\t \t <url>完全一样的见识!</url>";
-			}
+			};
+
 			/* 构建最终返回字串 */
 			results.push({
 				content: title_get, //无所谓传入老的，因为新的会再次更新
@@ -579,7 +582,7 @@ function get_more_info(text, edit_type, str_new_win, orgin_results, callback) {
 		} else {
 			callback(results); //提交结果，完事
 			return false;
-		}
+		};
 
 	}, onfaild)
 	//回调回去
@@ -665,17 +668,20 @@ function slboat_getwatchlist(text, edit_type, callback) {
 	} else {
 		req_url += "&list=watchlist"; //初步url构建
 	};
+
 	/* 处理翻页的玩意们 */
-	var st_look = 1; //开始寻找的个数,这是显示个数,唯一的问题就是数组的问题了
-	if (edit_type.isfind) { //如果是翻页模式...
-		st_look = edit_type.Srpages * 5; //根据着页来探索...保持有下一页的信息
+	var st_look = 0; //开始寻找的个数,这是显示个数,唯一的问题就是数组的问题了
+	if (edit_type.isfind) { //多页模式
+		st_look = edit_type.Srpages * 5; //这里有更多页的话...
 	};
+
 	if (edit_type.isfind) { //如果是需要多页的玩意...
 		put_info(printf("正在观察<url>[监视列表]</url>,这是第[%s]页:", [edit_type.Srpages + 1]));
-	} else {
+	} else { //第一页之外开始检索...
 		put_info("正在探索监视列表....你也可以直接进入你的<url>监视列表</url>" + perfix_tips); //提醒文字
 	};
-	req_url += "&wllimt=" + (st_look + 5); //仅仅比需要的多一个就够了
+
+	req_url += "&wllimit=" + (st_look + 5); //仅仅比需要的多一个就够了
 
 	//req_url += getatime(); //避开一些缓存，看起来避不开的是自带的玩意
 	THE_GREAT_REQUEST_WORKER = get_json(req_url, function(data) {
@@ -688,35 +694,41 @@ function slboat_getwatchlist(text, edit_type, callback) {
 				error_info = "我也不太清楚发生啥事了!";
 			} else {
 				error_info = printf("我想可能是因为: %s", [data.error.info]); //获得了错误信息
-			}
+			};
 			put_info(printf("探索<url>监视列表</url>的时候发生意外 %s", [error_info])); //印出错误信息
 			return false; //再见离开
-		}
+		};
+
 		if (edit_type.iswatchraw) //raw模式
 			result_arry = data.watchlistraw; //返回的数组，长度0就是没有结果	
 		else {
 			result_arry = data.query.watchlist; //返回的数组，长度0就是没有结果
-		}
+		};
+
 		if (typeof(result_arry) == "undefined") {
 			return false; //无效退出
-		}
-		if (result_arry.length > st_look) {
-			put_info(printf("探索到了<url>[监视列表]</url>,这是第[%s]页,[.]去往下一页,船长!", [edit_type.Srpages + 1]));
-		} else {
-			put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,这是最后页,船长!", [st_look + result_arry.length])); //提醒文字
 		};
+
+		if (edit_type.Srpages > 1) { //第一页外面的话处理
+			if (result_arry.length > st_look + 5) {
+				put_info(printf("探索到了<url>[监视列表]</url>,这是第[%s]页,[.]去往下一页,船长!", [edit_type.Srpages + 1]));
+			} else {
+				put_info(printf("探索到了<url>[监视列表]</url>!这是第[%s]页,这是最后页,船长!", [st_look])); //提醒文字
+			};
+		};
+
 		//这是每一个结果的处置
-		for (var index = st_look - 1; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
+		for (var index = st_look; index < st_look + 5 && result_arry[index]; index++) { //必须存在那么多
 			var title_get = result_arry[index].title //处理这个玩意
 			//push入数据
 			results.push({
 				content: title_get, //这是发送给输入事件的数据
 				description: printf("%s\t       <dim>->监视列表</dim><url>[%s]</url>", [title_get, index + 1]), //这是描述,序号总是会增加1
 			});
-		}
+		};
 		callback(results); //提交结果，完事
 	});
-}
+};
 
 /* 去除一切提醒的玩意 */
 
