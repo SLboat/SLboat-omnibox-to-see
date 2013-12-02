@@ -892,6 +892,8 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		/* 预置模板处理-如果有的话 */
 		if (match_namespace == "短英语") { //如果匹配了短英语
 			edit_link += "&preload=模板:短英语/预置"; //加上预置页面
+		} else if (match_namespace == "单词") {
+			edit_link += "&preload=模板:单词/预置"; //加上预置页面
 		};
 
 		if (edit_type.isnewtab) { //新标签页打开..
