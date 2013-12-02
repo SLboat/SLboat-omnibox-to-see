@@ -149,7 +149,7 @@ function ominibox_get_highline_forall(title_get, text, which_tag) {
 function slboat_namespace_take(title, just_query) {
 	/* 可供添加的还有扩展啥的 */
 	var just_query = just_query || false;
-	var ns_namespaces_arr = ["想法", "分类", "短英语"]; //支持的名字空间
+	var ns_namespaces_arr = ["想法", "分类", "短英语", "单词"]; //支持的名字空间
 	var match_namespace = ""; //无效的时候
 	var the_check_add_patern = ""; //校验[:]模式关闭
 	if (just_query) {

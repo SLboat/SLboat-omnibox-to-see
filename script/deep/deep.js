@@ -7,8 +7,9 @@ var FLAG_GET_BACK_BY_EARLY = true; //是否中途送回一次结果
 
 /* 命名空间支持 
  * 支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
+ * 还有个相关但是 ns_namespaces_arr 位于[deep_lib]
  */
-var WORK_FOR_NAMESPACES = "0|1|12|430|666";
+var WORK_FOR_NAMESPACES = "0|1|12|430|432|666";
 
 /* 调试配置
  * 快速开启一般调试: logme();
