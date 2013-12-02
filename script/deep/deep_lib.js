@@ -209,6 +209,14 @@ function ecsape_all_xmlstr(content) {
 		.replace(/'/g, '&apos;');
 };
 
+/* 送到航海见识墨水 */
+function sendMessageToSee(ask) {
+	/* 航海见识墨水的绑定ID */
+	var seeExtensionId = "bddkhdgfapjjgmgpdflnmombmiejffoj";
+	//开始发送
+	chrome.runtime.sendMessage(seeExtensionId, ask);
+}
+
 /* 地址栏的小玩意，逃脱xml字符
  * 由小约子发现的# Bug而来。
  *	传入完整的结果

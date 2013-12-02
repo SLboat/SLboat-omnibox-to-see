@@ -877,6 +877,10 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
 		encodeURIComponent(tips_title) + "&title=";
 	/* 只是输入模式的话 */
 	if (edit_type.isenter) {
+		sendMessageToSee({
+			want: "墨水瓶", //[放置墨水],[墨水瓶]
+			ink: "[[" + text + "]]", //内容
+		});
 		return false;
 	};
 	//处理新窗口
