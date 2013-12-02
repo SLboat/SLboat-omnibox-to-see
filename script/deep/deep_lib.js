@@ -422,6 +422,12 @@ function getDateDiff(timestamp) {
 		};
 	};
 
+	function adjustDate(d, offset) {
+		// offset is in minutes
+		var o = offset * 60 * 1000;
+		return new Date(+d + o);
+	}
+
 	/* 添加单位,来自Gadget-Navigation popups */
 	function addunit(num, str) {
 		var datestr = {
@@ -493,8 +499,10 @@ function getDateDiff(timestamp) {
 		}
 		return ssecs;
 	};
-
-	var age = new Date().getTime() - getDateFromTimestamp(timestamp);
+	var currTime = new Date().getTime(); //当前时间
+	var chstimeOffset = 480; //中国时间,8个小时=480秒
+	var gettimestamp = adjustDate(getDateFromTimestamp(timestamp), chstimeOffset)
+	var age = currTime - gettimestamp;
 	return formatAge(age); //返回字符串
 };
 
