@@ -122,7 +122,7 @@ function slboat_replace_namespace(text, ns_namespace) {
 function ominibox_get_highline(title_get, text, which_tag) {
 	//制造高亮玩意
 	which_tag = which_tag || "match"; //哪种标记封装,默认是match
-	var text_re = new RegExp(text, "i");
+	var text_re = new RegExp(text+"(?!>)", "i");
 	var match_part = title_get.match(text_re); //预测: 看起来只替换了一个
 	var match_str = title_get.replace(match_part, printf("<%s>%s</%s>", [which_tag, match_part, which_tag])); //高亮有的话，被处理了大小写
 	return match_str;
