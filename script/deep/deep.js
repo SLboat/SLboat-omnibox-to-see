@@ -1,9 +1,12 @@
 var THE_GREAT_REQUEST_WORKER = null; //当前请求
 var CONFIG_SITE_URL = "http://see.sl088.com"; //请求站点
+
+//V43破坏
 var FLAG_FREEZE_ME = false; //冻结更新
 
 /* 早送回,非常取决于Chrome的支持情况,目前在Chrome V31看起来工作的很好 */
-var FLAG_GET_BACK_BY_EARLY = true; //是否中途送回一次结果
+//TODO:用设置页面处理,V43坏了
+var FLAG_GET_BACK_BY_EARLY = false; //是否中途送回一次结果
 
 /* 命名空间支持 
  * 支持主要命名空间、帮助命名空间，以及主要的讨论空间, 想法空间..
@@ -299,7 +302,10 @@ function get_search_text(text, edit_type, results, callback, lastsearch) {
 		prefix = "深入的<url>第" + (pages - 1) + "页</url>...";
 	};
 
-	put_info(printf("正在深入探索%s....[<match>%s</match>]", [whoiam, text])); //发绿？
+	//FIX:V43之后不给回调两次了..
+	if (FLAG_GET_BACK_BY_EARLY) {
+		put_info(printf("正在深入探索%s....[<match>%s</match>]", [whoiam, text])); //发绿？
+	};
 
 	req_url += "&srwhat=" + strwhat; //搜索类型
 	//想法: 也许根本没必要在这里筛选,而是结果里,那样的好处就是,不必为分页进行操心了..
